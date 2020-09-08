@@ -25,7 +25,7 @@
         </service>
 
         <!-- exporter service -->
-        <service id="boxalino.exporter.util.file-handler" class="Boxalino\Exporter\Service\Exporter\Util\FileHandler" />
+        <service id="boxalino.exporter.util.file-handler" class="Boxalino\Exporter\Service\Util\FileHandler" />
         <service id="boxalino.exporter.util.library" class="Boxalino\Exporter\Service\Util\ContentLibrary" />
         <service id="boxalino.exporter.util.configurator" class="Boxalino\Exporter\Service\Util\Configuration" parent="boxalino.shopware.util.configurator" />
 
@@ -43,7 +43,7 @@
             <argument type="service" id="boxalino.exporter.component.order"/>
             <argument type="service" id="boxalino.exporter.component.customer"/>
             <argument type="service" id="boxalino.exporter.component.product"/>
-            <argument type="service" id="monolog.logger.boxalino"/>
+            <argument type="service" id="monolog.logger.boxalino-exporter"/>
             <argument type="service" id="boxalino.exporter.util.configurator"/>
             <argument type="service" id="boxalino.exporter.util.library"/>
             <argument type="service" id="boxalino.exporter.util.file-handler"/>
@@ -51,7 +51,7 @@
         </service>
 
         <service id="Boxalino\Exporter\Service\ExporterManager" abstract="true">
-            <argument type="service" id="monolog.logger.boxalino"/>
+            <argument type="service" id="monolog.logger.boxalino-exporter"/>
             <argument type="service" id="boxalino.exporter.util.configurator"/>
             <argument type="service" id="boxalino.exporter.scheduler"/>
             <argument type="service" id="boxalino.exporter.service"/>
@@ -64,7 +64,7 @@
         <service id="boxalino.exporter.component" class="Boxalino\Exporter\Service\Component\ExporterComponentAbstract" >
             <argument type="service" id="boxalino.exporter.component.resource"/>
             <argument type="service" id="Doctrine\DBAL\Connection"/>
-            <argument type="service" id="monolog.logger.boxalino"/>
+            <argument type="service" id="monolog.logger.boxalino-exporter"/>
             <argument type="service" id="boxalino.exporter.util.configurator"/>
         </service>
         <service id="boxalino.exporter.component.customer" class="Boxalino\Exporter\Service\Component\Customer" parent="boxalino.exporter.component" />
@@ -97,7 +97,7 @@
         <service id="boxalino.exporter.component.product.visibility" class="Boxalino\Exporter\Service\Item\Visibility" parent="boxalino.exporter.component.item" />
         <service id="boxalino.exporter.component.item" class="Boxalino\Exporter\Service\Item\ItemsAbstract" >
             <argument type="service" id="Doctrine\DBAL\Connection"/>
-            <argument type="service" id="monolog.logger.boxalino"/>
+            <argument type="service" id="monolog.logger.boxalino-exporter"/>
             <argument type="service" id="boxalino.exporter.util.configurator"/>
         </service>
 

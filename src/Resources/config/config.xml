@@ -91,7 +91,7 @@
         </input-field>
         <input-field type="int">
             <name>exportTimeout</name>
-            <defaultValue>300</defaultValue>
+            <defaultValue>90</defaultValue>
             <label>Timeout</label>
             <helpText>Archive exporter timeout; It is used to stop your server from waiting a status from the processed archive;</helpText>
         </input-field>

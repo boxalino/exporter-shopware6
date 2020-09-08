@@ -12,6 +12,7 @@ use Psr\Log\LoggerInterface;
  * Class Configuration
  * Exporter configuration helper
  * Contains all the configuration data required for the exporter to be managed
+ * Can be rewritten with the use of the dependency injection (DI)
  *
  * @package Boxalino\Exporter\Service\Util
  */
@@ -398,6 +399,9 @@ class Configuration extends \Boxalino\RealTimeUserExperience\Service\Util\Config
      * Time interval after a full data export that a delta is allowed to run
      * It is set in order to avoid overlapping index updates
      *
+     * A full data synchronization can take up to 2h (depending on the size of the export and the complexity of data)
+     * For this reason, the daily full data synchronization must happen when there is the least traffic on the store
+     *
      * @param string $account
      * @return int
      * @throws \Exception
@@ -428,7 +432,7 @@ class Configuration extends \Boxalino\RealTimeUserExperience\Service\Util\Config
             return $config['exportDeltaFrequency'];
         }
 
-        return 30;
+        return 15;
     }
 
 }

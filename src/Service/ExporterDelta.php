@@ -15,21 +15,27 @@ class ExporterDelta extends ExporterManager
     /**
      * Default server timeout
      */
-    const SERVER_TIMEOUT_DEFAULT = 120;
+    const SERVER_TIMEOUT_DEFAULT = 60;
 
     /**
      * @var array
      */
     protected $ids = [];
 
+    /**
+     * @return string
+     */
     public function getType(): string
     {
-        return self::EXPORTER_ID;
+        return ExporterScheduler::BOXALINO_EXPORTER_TYPE_DELTA;
     }
 
+    /**
+     * @return string
+     */
     public function getExporterId(): string
     {
-        return ExporterScheduler::BOXALINO_EXPORTER_TYPE_DELTA;
+        return self::EXPORTER_ID;
     }
 
     /**
@@ -43,7 +49,7 @@ class ExporterDelta extends ExporterManager
 
     /**
      * 2 subsequent deltas can only be run with the time difference allowed
-     * the delta after a full export can only be run after the configured time only
+     * the delta after a full export can only be run once the configured time has passed
      *
      * @param string $account
      * @return bool
@@ -70,11 +76,13 @@ class ExporterDelta extends ExporterManager
     }
 
     /**
+     * Delta IDs - the product IDs that have been affected in between data synchronization cycles
+     *
      * @return array
      */
     public function getIds() : array
     {
-        return [];
+        return $this->deltaIds;
     }
 
     /**

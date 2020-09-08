@@ -4,6 +4,13 @@ namespace Boxalino\Exporter\Service;
 use Doctrine\DBAL\Connection;
 use Psr\Log\LoggerInterface;
 
+/**
+ * Class ExporterScheduler
+ * The ExporterScheduler is a resource helper (DB) that checks the status of the running/existing processes
+ * (to not be confused with the Shopware6 Scheduler)
+ *
+ * @package Boxalino\Exporter\Service
+ */
 class ExporterScheduler
 {
 
@@ -40,7 +47,7 @@ class ExporterScheduler
      * @param string $type
      * @return string
      */
-    public function getLastExportByAccountType(string $account, string $type)
+    public function getLastExportByAccountType(string $account, string $type) : ?string
     {
         $query = $this->connection->createQueryBuilder();
         $query->select(['export_date'])
@@ -54,7 +61,7 @@ class ExporterScheduler
         $latestRecord = $query->execute()->fetchColumn();
         if(empty($latestRecord['export_date']) || is_null($latestRecord['export_date']))
         {
-            return "NAN";
+            return null;
         }
 
         return $latestRecord['export_date'];
@@ -65,7 +72,7 @@ class ExporterScheduler
      * @param string $account
      * @return string
      */
-    public function getLastSuccessfulExportByTypeAccount(string $type, string $account)
+    public function getLastSuccessfulExportByTypeAccount(string $type, string $account) : ?string
     {
         $query = $this->connection->createQueryBuilder();
         $query->select(['export_date'])
@@ -81,7 +88,7 @@ class ExporterScheduler
         $latestRecord = $query->execute()->fetchColumn();
         if(empty($latestRecord['export_date']) || is_null($latestRecord['export_date']))
         {
-            return "NAN";
+            return null;
         }
 
         return $latestRecord['export_date'];
@@ -90,18 +97,18 @@ class ExporterScheduler
     /**
      * The export table is truncated
      * @param string $type
+     * @param string $account
      * @return bool
-     * @throws \Doctrine\DBAL\DBALException
      */
     public function clearExportTable(string $type, string $account) : bool
     {
         if(is_null($type))
         {
-            $this->connection->delete("boxalino_export", ["account"=>$account]);
+            $this->connection->delete("boxalino_export", ["account" => $account]);
             return true;
         }
 
-        $this->connection->delete("boxalino_export", ["account"=>$account, "type" => $type]);
+        $this->connection->delete("boxalino_export", ["account" => $account, "type" => $type]);
         return true;
     }
 
@@ -113,12 +120,10 @@ class ExporterScheduler
     public function viewExportTable() : array
     {
         $query = $this->connection->createQueryBuilder();
-        $query->select()
-            ->from("boxalino_export");
+        $query->select()->from("boxalino_export");
 
         return $query->execute()->fetchAll();
     }
-
 
     /**
      * 1. Check if there is any active running process with status PROCESSING
@@ -184,10 +189,10 @@ class ExporterScheduler
      * @param string $type
      * @param string $status
      * @param string $account
-     * @return int
+     * @return void
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function updateScheduler(string $date, string $type, string $status, string $account)
+    public function updateScheduler(string $date, string $type, string $status, string $account) : void
     {
         $dataBind = [
             $account,
@@ -199,7 +204,7 @@ class ExporterScheduler
         $query="INSERT INTO boxalino_export (account, type, export_date, status) VALUES (?, ?, ?, ?) ".
             "ON DUPLICATE KEY UPDATE export_date = '$date', status = '$status', updated_at=NOW();";
 
-        return $this->connection->executeUpdate(
+        $this->connection->executeUpdate(
             $query,
             $dataBind
         );

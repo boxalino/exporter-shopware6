@@ -227,7 +227,7 @@ class ExporterService
      */
     public function exportProducts() : void
     {
-        $this->logger->info("BoxalinoExporter: Preparing products for account {$account}.");
+        $this->logger->info("BoxalinoExporter: Preparing products for account {$this->getAccount()}.");
         try{
             $this->productExporter->setAccount($this->getAccount())
                 ->setFiles($this->getFiles())
@@ -247,7 +247,7 @@ class ExporterService
     {
         if($this->getIsFull())
         {
-            $this->logger->info("BoxalinoExporter: Preparing customers for account {$account}.");
+            $this->logger->info("BoxalinoExporter: Preparing customers for account {$this->getAccount()}.");
             $this->customerExporter->setFiles($this->getFiles())
                 ->setAccount($this->getAccount())
                 ->setLibrary($this->productExporter->getLibrary())
@@ -262,7 +262,7 @@ class ExporterService
     {
         if($this->getIsFull())
         {
-            $this->logger->info("BoxalinoExporter: Preparing transactions for account {$account}.");
+            $this->logger->info("BoxalinoExporter: Preparing transactions for account {$this->getAccount()}.");
             $this->transactionExporter->setFiles($this->getFiles())
                 ->setAccount($this->getAccount())
                 ->setLibrary($this->customerExporter->getLibrary())
