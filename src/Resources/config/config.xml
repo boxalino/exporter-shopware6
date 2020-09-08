@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/shopware/platform/master/src/Core/System/SystemConfig/Schema/config.xsd">
+    <card>
+        <title>General Configuration</title>
+        <title lang="de-DE">Minimale Konfiguration</title>
+        <input-field type="bool">
+            <name>export</name>
+            <defaultValue>0</defaultValue>
+            <label>Exporter Status</label>
+        </input-field>
+        <input-field type="text">
+            <name>account</name>
+            <label>Account</label>
+            <helpText>Please request your account with credentials by contacting support@boxalino.com.</helpText>
+        </input-field>
+        <input-field type="text">
+            <name>password</name>
+            <label>Password</label>
+            <helpText>Please request your account with credentials by contacting support@boxalino.com.</helpText>
+        </input-field>
+        <input-field type="bool">
+            <name>devIndex</name>
+            <defaultValue>0</defaultValue>
+            <label>Use development data index</label>
+        </input-field>
+        <input-field type="bool">
+            <name>exportPublishConfig</name>
+            <defaultValue>1</defaultValue>
+            <label>Publish Configuration</label>
+            <helpText>Yes by default. Any changes in product/customers/transaction properties will be automatically validated. For safety, it is recommended to de-activate this option once in production to make sure no unwanted changes are automatically published. However, if not activated, changes in the configuration will not be considered until published otherwise and, in the case of property deletions, the data sync might fail until the changes are published. Publishing of the configuration can be done by re-activating this option and running a full data sync again, or by publishing the configuration directly in Boxalino Data Intelligence web-admin.</helpText>
+        </input-field>
+        <input-field type="text">
+            <name>productsExtraTable</name>
+            <label>Products - Extra Tables</label>
+            <helpText>Optional: list of additional tables related to the products entity, separated by ','; the tables are to be exported as they are.</helpText>
+        </input-field>
+        <input-field type="bool">
+            <name>exportProductImages</name>
+            <defaultValue>1</defaultValue>
+            <label>Export Products Image URL</label>
+            <helpText>Optional: Export image and thumbnail image URLs (not required if standard usage of search and recommendations, as the shop renders the images itself). If activated, makes export slower.</helpText>
+        </input-field>
+        <input-field type="bool">
+            <name>exportProductUrl</name>
+            <defaultValue>1</defaultValue>
+            <label>Export Products URL</label>
+            <helpText>Optional: Export product urls (not required if standard usage of search and recommendations, as the shop renders the url itself). If activated, makes export slower.</helpText>
+        </input-field>
+        <input-field type="bool">
+            <name>exportCustomerEnable</name>
+            <defaultValue>1</defaultValue>
+            <label>Export Customers</label>
+        </input-field>
+        <input-field type="text">
+            <name>customersExtraTable</name>
+            <label>Customers - Extra Tables</label>
+            <helpText>Optional: list of additional tables related to the customers entity, separated by ','; the tables are to be exported as they are.</helpText>
+        </input-field>
+        <input-field type="bool">
+            <name>exportTransactionEnable</name>
+            <defaultValue>1</defaultValue>
+            <label>Export Transactions</label>
+        </input-field>
+        <input-field type="bool">
+            <name>exportTransactionMode</name>
+            <defaultValue>0</defaultValue>
+            <label>Last month transactions export</label>
+            <helpText>If unchecked - the full transactions history will be exported. If checked (desired mode), the exporter will only export the last month.</helpText>
+        </input-field>
+        <input-field type="text">
+            <name>transactionsExtraTable</name>
+            <label>Transactions - Extra Tables</label>
+            <helpText>Optional: list of additional tables related to the transactions entity, separated by ','; the tables are to be exported as they are.</helpText>
+        </input-field>
+        <input-field type="bool">
+            <name>exportVoucherEnable</name>
+            <defaultValue>1</defaultValue>
+            <label>Export Vouchers</label>
+        </input-field>
+        <input-field type="int">
+            <name>exportCronSchedule</name>
+            <defaultValue>60</defaultValue>
+            <label>Schedule Time (min)</label>
+            <helpText>Set the time in minutes for the delta export cron job to wait since the last full export cron job. This option needs to be set, if you use the delta export cron job regularly, otherwise the delta export will run while the full export is still processing. Usually 4 hours (240 minutes) should be good, but this depends on the size of your shop.</helpText>
+        </input-field>
+        <input-field type="int">
+            <name>exportDeltaFrequency</name>
+            <defaultValue>30</defaultValue>
+            <label>Delta-Delta frequency (min)</label>
+            <helpText>Set the time in minutes for the minimum time interval between 2 deltas to allow a run.</helpText>
+        </input-field>
+        <input-field type="int">
+            <name>exportTimeout</name>
+            <defaultValue>300</defaultValue>
+            <label>Timeout</label>
+            <helpText>Archive exporter timeout; It is used to stop your server from waiting a status from the processed archive;</helpText>
+        </input-field>
+        <input-field type="text">
+            <name>temporaryExportPath</name>
+            <label>Temporary Export Path</label>
+            <helpText>Optional: temporary export path where the ZIP is created before being exported to Boxalino.</helpText>
+        </input-field>
+    </card>
+</config>
