@@ -2,10 +2,13 @@
 
 ## Introduction
 For the Shopware6 integration, Boxalino comes with a divided approach: framework layer, data export layer and integration layer.
-The current repository is used as a **data export layer** and includes the interfaces defined for Shopware6 export events.
+The current repository is used as a **data export layer**.
 
-By adding this package to your Shopware6 setup, your store data can be exported to Boxalino.
-In order to use the API for generic functionalities (search, autocomplete, recommendations, etc), please check the integration repository
+By adding this package to your Shopware6 project, your setup can do the following:
+ 1. Run full data exports
+ 2. Run real-time data synchronizations (delta)
+
+In order to create scheduled events, please check the integration repository for the guidelines:
 https://github.com/boxalino/rtux-integration-shopware
 
 ## Setup
@@ -35,5 +38,3 @@ The exporter will log it`s process in a dedicated log _./var/log/boxalino-export
 ## Contact us!
 
 If you have any question, just contact us at support@boxalino.com
-
-*the marked features are not yet available
