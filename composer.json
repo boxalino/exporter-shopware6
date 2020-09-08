@@ -15,7 +15,7 @@
         "installer-paths": {
             "custom/plugins/BoxalinoExporter": ["boxalino/exporter-shopware6", "vendor/package"]
         },
-        "shopware-plugin-class": "Boxalino\\Exporer\\BoxalinoExporter",
+        "shopware-plugin-class": "Boxalino\\Exporter\\BoxalinoExporter",
         "copyright": "Boxalino AG, 2020",
         "label": {
             "de-DE": "Boxalino Exporter für Shopware v6",
