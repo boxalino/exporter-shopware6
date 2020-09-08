@@ -18,7 +18,7 @@
 
     <services>
         <!-- scheduled task sample (has to be triggered in the integration layer) -->
-        <service id="Boxalino\RealTimeUserExperience\ScheduledTask\ExporterFullHandlerAbstract" abstract="true">
+        <service id="Boxalino\Exporter\ScheduledTask\ExporterFullHandlerAbstract" abstract="true">
             <argument type="service" id="scheduled_task.repository" />
             <argument type="service" id="monolog.logger.boxalino-exporter"/>
             <argument type="service" id="boxalino.exporter.full"/>
