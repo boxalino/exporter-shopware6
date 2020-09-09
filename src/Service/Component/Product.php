@@ -1,6 +1,7 @@
 <?php
 namespace Boxalino\Exporter\Service\Component;
 
+use Boxalino\Exporter\Service\Component\ProductComponentInterface;
 use Boxalino\Exporter\Service\ExporterScheduler;
 use Boxalino\Exporter\Service\Item\ItemsAbstract;
 use Boxalino\Exporter\Service\Item\Manufacturer;
@@ -14,6 +15,7 @@ use Boxalino\Exporter\Service\Item\Translation;
 use Boxalino\Exporter\Service\Item\Url;
 use Boxalino\Exporter\Service\Item\Review;
 use Boxalino\Exporter\Service\Item\Visibility;
+use Boxalino\Exporter\Service\Delta\ProductStateRecognitionInterface;
 use Boxalino\Exporter\Service\Util\Configuration;
 use Boxalino\Exporter\Service\Item\Tag;
 use Doctrine\DBAL\Connection;
@@ -31,6 +33,7 @@ use Shopware\Core\Framework\Uuid\Uuid;
  * @package Boxalino\Exporter\Service\Component
  */
 class Product extends ExporterComponentAbstract
+    implements ProductComponentInterface
 {
 
     CONST EXPORTER_LIMIT = 10000000;
@@ -111,9 +114,9 @@ class Product extends ExporterComponentAbstract
     protected $itemExportersList;
 
     /**
-     * @var ExporterScheduler
+     * @var ProductStateRecognitionInterface
      */
-    protected $scheduler;
+    protected $deltaStateRecognitionHandler;
 
     public function __construct(
         ComponentResource $resource,
@@ -132,7 +135,7 @@ class Product extends ExporterComponentAbstract
         Translation $translationExporter,
         Tag $tagExporter,
         Visibility $visibilityExporter,
-        ExporterScheduler $scheduler
+        ProductStateRecognitionInterface $recognition
     ){
         $this->itemExportersList = new \ArrayObject();
         $this->optionExporter = $optionExporter;
@@ -147,7 +150,7 @@ class Product extends ExporterComponentAbstract
         $this->translationExporter = $translationExporter;
         $this->tagExporter = $tagExporter;
         $this->visibilityExporter = $visibilityExporter;
-        $this->scheduler = $scheduler;
+        $this->deltaStateRecognitionHandler = $recognition;
 
         parent::__construct($resource, $connection, $boxalinoLogger, $exporterConfigurator);
     }
@@ -186,9 +189,9 @@ class Product extends ExporterComponentAbstract
 
             if ($this->getIsDelta())
             {
-                $query->andWhere("STR_TO_DATE(p.updated_at,  '%Y-%m-%d %H:%i') > :lastExport OR STR_TO_DATE(parent.updated_at,  '%Y-%m-%d %H:%i') > :lastExport")
-                    ->setParameter('lastExport', $this->getLastExport());
+                $query = $this->addDeltaStateRecognition($query);
             }
+            
             $count = $query->execute()->rowCount();
             $totalCount+=$count;
             if($totalCount == 0)
@@ -396,24 +399,6 @@ class Product extends ExporterComponentAbstract
     }
 
     /**
-     * @return string
-     */
-    public function getLastExport()
-    {
-        if (empty($this->lastExport))
-        {
-            $this->lastExport = date("Y-m-d H:i:s", strtotime("-1 day"));
-            $latestExport = $this->scheduler->getLastExportByAccountStatus($this->getAccount(), ExporterScheduler::BOXALINO_EXPORTER_STATUS_SUCCESS);
-            if(!is_null($latestExport))
-            {
-                $this->lastExport = $latestExport;
-            }
-        }
-
-        return $this->lastExport;
-    }
-
-    /**
      * Product purchasable logic depending on the default filter
      *
      * @param $row
@@ -474,6 +459,15 @@ class Product extends ExporterComponentAbstract
     {
         $this->itemExportersList->append($extraExporter);
         return $this;
+    }
+
+    /**
+     * @param QueryBuilder $queryBuilder
+     * @return QueryBuilder
+     */
+    public function addDeltaStateRecognition(QueryBuilder $queryBuilder) : QueryBuilder
+    {
+        return $this->deltaStateRecognitionHandler->setAccount($this->getAccount())->addState($queryBuilder);
     }
 
     /**

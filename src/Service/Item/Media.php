@@ -154,7 +154,7 @@ class Media extends ItemsAbstract
             $query->andWhere('product_media.product_id IN (:ids)')
                 ->setParameter('ids', Uuid::fromHexToBytesList($productIds), Connection::PARAM_STR_ARRAY);
         }
-
+        
         return $query;
     }
 

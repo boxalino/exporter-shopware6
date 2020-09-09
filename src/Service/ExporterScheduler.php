@@ -54,7 +54,7 @@ class ExporterScheduler
             ->from("boxalino_export")
             ->andWhere("account = :account")
             ->andWhere("status = :status")
-            ->orderBy("STR_TO_DATE(export_date, '%Y-%m-%d %H:%i:%s')", "DESC")
+            ->orderBy("STR_TO_DATE(export_date, '%Y-%m-%d %H:%i')", "DESC")
             ->setMaxResults(1)
             ->setParameter("account", $account)
             ->setParameter("status", $status);
@@ -80,7 +80,7 @@ class ExporterScheduler
             ->andWhere("account = :account")
             ->andWhere("status = :status")
             ->andWhere("type = :type")
-            ->orderBy("STR_TO_DATE(export_date, '%Y-%m-%d %H:%i:%s')", "DESC")
+            ->orderBy("STR_TO_DATE(export_date, '%Y-%m-%d %H:%i')", "DESC")
             ->setMaxResults(1)
             ->setParameter("account", $account)
             ->setParameter("type", $type)

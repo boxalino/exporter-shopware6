@@ -10,9 +10,10 @@ use \Psr\Log\LoggerInterface;
 
 /**
  * Class ExporterComponentAbstract
+ *
  * @package Boxalino\Exporter\Service\Component
  */
-abstract class ExporterComponentAbstract implements ExporterComponentInterface
+abstract class ExporterComponentAbstract
 {
     CONST EXPORTER_COMPONENT_ID_FIELD = "";
     CONST EXPORTER_COMPONENT_MAIN_FILE = "";
@@ -73,7 +74,6 @@ abstract class ExporterComponentAbstract implements ExporterComponentInterface
      */
     protected $headerFields = [];
 
-
     /**
      * ExporterComponentAbstract constructor.
      *
@@ -113,6 +113,7 @@ abstract class ExporterComponentAbstract implements ExporterComponentInterface
         } catch (\Exception $exc)
         {
             $this->logger->error("BoxalinoExporter: {$this->getComponent()} export failed: " . $exc->getMessage());
+            $this->logger->info($exc->getTraceAsString());
         }
     }
 
@@ -354,4 +355,5 @@ abstract class ExporterComponentAbstract implements ExporterComponentInterface
     {
         return $this->successOnComponentExport;
     }
+
 }

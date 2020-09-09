@@ -13,6 +13,7 @@ use Shopware\Core\Framework\Uuid\Uuid;
  * @package Boxalino\Exporter\Service\Component
  */
 class Customer extends ExporterComponentAbstract
+    implements CustomerComponentInterface
 {
 
     CONST EXPORTER_LIMIT = 10000000;

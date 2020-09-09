@@ -101,7 +101,7 @@ class Price extends ItemsAbstract
             $query->andWhere('product.id IN (:ids)')
                 ->setParameter('ids', Uuid::fromHexToBytesList($productIds), Connection::PARAM_STR_ARRAY);
         }
-
+        
         return $query;
     }
 

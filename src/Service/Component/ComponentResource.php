@@ -7,18 +7,15 @@ use Psr\Log\LoggerInterface;
 
 class ComponentResource
 {
-
     /**
      * @var Connection
      */
     protected $connection;
 
-
     /**
      * @var LoggerInterface
      */
     protected $logger;
-
 
     /**
      * @param Connection $connection
@@ -30,7 +27,6 @@ class ComponentResource
         $this->connection = $connection;
         $this->logger = $boxalinoLogger;
     }
-
 
     /**
      * @param string $table

@@ -1,9 +1,9 @@
 <?php
 namespace Boxalino\Exporter\Service;
 
-use Boxalino\Exporter\Service\Component\Customer;
-use Boxalino\Exporter\Service\Component\Order;
-use Boxalino\Exporter\Service\Component\Product;
+use Boxalino\Exporter\Service\Component\CustomerComponentInterface;
+use Boxalino\Exporter\Service\Component\OrderComponentInterface;
+use Boxalino\Exporter\Service\Component\ProductComponentInterface;
 use Boxalino\Exporter\Service\ExporterScheduler;
 use Boxalino\Exporter\Service\Util\Configuration;
 use Boxalino\Exporter\Service\Util\FileHandler;
@@ -50,9 +50,9 @@ class ExporterService
 
 
     public function __construct(
-        Order $transactionExporter,
-        Customer $customerExporter,
-        Product $productExporter,
+        OrderComponentInterface $transactionExporter,
+        CustomerComponentInterface $customerExporter,
+        ProductComponentInterface $productExporter,
         LoggerInterface $boxalinoLogger,
         Configuration $exporterConfigurator,
         ContentLibrary $library,

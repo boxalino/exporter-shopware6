@@ -69,9 +69,9 @@ class Option extends PropertyTranslation
             $translationFields[] = "GROUP_CONCAT(translation.{$languageHeader} SEPARATOR ' - ') AS {$languageHeader}";
         }
         return array_merge($translationFields,
-            [
-                "LOWER(HEX(product_option.product_id)) AS product_id"
-            ]);
+        [
+            "LOWER(HEX(product_option.product_id)) AS product_id"
+        ]);
     }
 
 }

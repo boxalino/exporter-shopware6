@@ -48,7 +48,7 @@ class Review extends ItemsAbstract
             ->setParameter('live', Uuid::fromHexToBytes(Defaults::LIVE_VERSION), ParameterType::BINARY)
             ->setFirstResult(($page - 1) * Product::EXPORTER_STEP)
             ->setMaxResults(Product::EXPORTER_STEP);
-
+        
         $productIds = $this->getExportedProductIds();
         if(!empty($productIds))
         {

@@ -137,7 +137,7 @@ class Category extends ItemsAbstract
             ->setParameter('live', Uuid::fromHexToBytes(Defaults::LIVE_VERSION), ParameterType::BINARY);
 
         $productIds = $this->getExportedProductIds();
-        if (!empty($productIds))
+        if (!empty($productIds)) 
         {
             $query->andWhere("LOWER(HEX(product_category_tree.product_id)) IN (:ids)")
                 ->setParameter('ids', Uuid::fromHexToBytesList($productIds), Connection::PARAM_STR_ARRAY);
