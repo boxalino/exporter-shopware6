@@ -6,6 +6,7 @@ use Doctrine\DBAL\ParameterType;
 use Shopware\Core\Defaults;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Shopware\Core\Framework\Uuid\Uuid;
+use Doctrine\DBAL\Connection;
 
 class Manufacturer extends ItemsAbstract
 {
@@ -62,6 +63,13 @@ class Manufacturer extends ItemsAbstract
             ->setParameter('channelRootCategoryId', $this->getRootCategoryId(), ParameterType::STRING)
             ->setFirstResult(($page - 1) * Product::EXPORTER_STEP)
             ->setMaxResults(Product::EXPORTER_STEP);
+
+        $productIds = $this->getExportedProductIds();
+        if(!empty($productIds))
+        {
+            $query->andWhere('p.id IN (:ids)')
+                ->setParameter('ids', Uuid::fromHexToBytesList($productIds), Connection::PARAM_STR_ARRAY);
+        }
 
         return $query;
     }

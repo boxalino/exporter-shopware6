@@ -95,6 +95,13 @@ class Price extends ItemsAbstract
             ->setFirstResult(($page - 1) * Product::EXPORTER_STEP)
             ->setMaxResults(Product::EXPORTER_STEP);
 
+        $productIds = $this->getExportedProductIds();
+        if(!empty($productIds))
+        {
+            $query->andWhere('product.id IN (:ids)')
+                ->setParameter('ids', Uuid::fromHexToBytesList($productIds), Connection::PARAM_STR_ARRAY);
+        }
+
         return $query;
     }
 

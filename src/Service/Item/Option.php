@@ -2,6 +2,7 @@
 namespace Boxalino\Exporter\Service\Item;
 
 use Boxalino\Exporter\Service\Component\Product;
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use Shopware\Core\Defaults;
 use Doctrine\DBAL\Query\QueryBuilder;
@@ -39,6 +40,13 @@ class Option extends PropertyTranslation
             ->setFirstResult(($page - 1) * Product::EXPORTER_STEP)
             ->setMaxResults(Product::EXPORTER_STEP);
 
+        $productIds = $this->getExportedProductIds();
+        if(!empty($productIds))
+        {
+            $query->andWhere('product_option.product_id IN (:ids)')
+                ->setParameter('ids', Uuid::fromHexToBytesList($productIds), Connection::PARAM_STR_ARRAY);
+        }
+
         return $query;
     }
 
@@ -61,9 +69,9 @@ class Option extends PropertyTranslation
             $translationFields[] = "GROUP_CONCAT(translation.{$languageHeader} SEPARATOR ' - ') AS {$languageHeader}";
         }
         return array_merge($translationFields,
-        [
-            "LOWER(HEX(product_option.product_id)) AS product_id"
-        ]);
+            [
+                "LOWER(HEX(product_option.product_id)) AS product_id"
+            ]);
     }
 
 }

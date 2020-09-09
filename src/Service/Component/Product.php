@@ -152,7 +152,6 @@ class Product extends ExporterComponentAbstract
         parent::__construct($resource, $connection, $boxalinoLogger, $exporterConfigurator);
     }
 
-
     public function exportComponent()
     {
         /** defaults */
@@ -187,7 +186,7 @@ class Product extends ExporterComponentAbstract
 
             if ($this->getIsDelta())
             {
-                $query->andWhere('p.updated_at > :lastExport')
+                $query->andWhere("STR_TO_DATE(p.updated_at,  '%Y-%m-%d %H:%i') > :lastExport OR STR_TO_DATE(parent.updated_at,  '%Y-%m-%d %H:%i') > :lastExport")
                     ->setParameter('lastExport', $this->getLastExport());
             }
             $count = $query->execute()->rowCount();
@@ -199,11 +198,10 @@ class Product extends ExporterComponentAbstract
             $results = $this->processExport($query);
             foreach($results as $row)
             {
-                if ($this->getIsDelta() && !isset($this->deltaIds[$row['id']])) {
-                    $this->deltaIds[$row['id']] = $row['id'];
+                if($this->getIsDelta())
+                {
+                    $this->exportedProductIds[] = $row['id'];
                 }
-
-                $this->exportedProductIds[] = $row['id'];
                 $row['purchasable'] = $this->getProductPurchasableValue($row);
                 $row['immediate_delivery'] = $this->getProductImmediateDeliveryValue($row);
                 if($header)
@@ -296,7 +294,7 @@ class Product extends ExporterComponentAbstract
         $exporter->setAccount($this->getAccount())
             ->setFiles($this->getFiles())
             ->setLibrary($this->getLibrary())
-            ->setExportedProductIds($this->exportedProductIds);
+            ->setExportedProductIds($this->getIds());
         $exporter->export();
         $this->logger->info("BoxalinoExporter: MEMORY (MB) AFTER {$step}: " . round(memory_get_usage(true)/1048576,2));
     }
@@ -388,7 +386,7 @@ class Product extends ExporterComponentAbstract
             'IF(p.parent_id IS NULL, p.mark_as_topseller, IF(p.mark_as_topseller IS NULL, parent.mark_as_topseller, IF(p.available = 1, p.mark_as_topseller, parent.mark_as_topseller))) AS mark_as_topseller',
             'p.weight', 'p.height', 'p.length',
             'IF(p.parent_id IS NULL, p.release_date, IF(p.release_date IS NULL, parent.release_date, p.release_date)) AS release_date',
-            'p.whitelist_ids', 'p.blacklist_ids', 'p.configurator_group_config', 'p.created_at', 'p.updated_at',
+            'p.whitelist_ids', 'p.blacklist_ids', 'p.configurator_group_config', 'p.created_at', 'p.updated_at', 'parent.updated_at AS parent_updated_at',
             'IF(p.parent_id IS NULL, p.rating_average, parent.rating_average) AS rating_average', 'p.display_group', 'p.child_count',
             'currency.iso_code AS currency', 'currency.factor AS currency_factor',
             'tax.tax_rate', 'delivery_time_translation.name AS delivery_time_name',
@@ -476,6 +474,14 @@ class Product extends ExporterComponentAbstract
     {
         $this->itemExportersList->append($extraExporter);
         return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getIds() : array
+    {
+        return array_filter(array_unique($this->exportedProductIds));
     }
 
 }

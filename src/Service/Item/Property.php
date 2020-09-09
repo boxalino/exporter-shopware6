@@ -2,6 +2,7 @@
 namespace Boxalino\Exporter\Service\Item;
 
 use Boxalino\Exporter\Service\Component\Product;
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\FetchMode;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Query\QueryBuilder;
@@ -95,6 +96,13 @@ class Property extends PropertyTranslation
             ->setParameter("propertyId", Uuid::fromHexToBytes($this->propertyId), ParameterType::STRING)
             ->setFirstResult(($page - 1) * Product::EXPORTER_STEP)
             ->setMaxResults(Product::EXPORTER_STEP);
+
+        $productIds = $this->getExportedProductIds();
+        if(!empty($productIds))
+        {
+            $query->andWhere('product_property.product_id IN (:ids)')
+                ->setParameter('ids', Uuid::fromHexToBytesList($productIds), Connection::PARAM_STR_ARRAY);
+        }
 
         return $query;
     }

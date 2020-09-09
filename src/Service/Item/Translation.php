@@ -2,6 +2,7 @@
 namespace Boxalino\Exporter\Service\Item;
 
 use Boxalino\Exporter\Service\Component\Product;
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use Shopware\Core\Defaults;
 use Doctrine\DBAL\Query\QueryBuilder;
@@ -86,6 +87,13 @@ class Translation extends ItemsAbstract
             ->setParameter('live', Uuid::fromHexToBytes(Defaults::LIVE_VERSION), ParameterType::BINARY)
             ->setFirstResult(($page - 1) * Product::EXPORTER_STEP)
             ->setMaxResults(Product::EXPORTER_STEP);
+
+        $productIds = $this->getExportedProductIds();
+        if(!empty($productIds))
+        {
+            $query->andWhere('product.id IN (:ids)')
+                ->setParameter('ids', Uuid::fromHexToBytesList($productIds), Connection::PARAM_STR_ARRAY);
+        }
 
         return $query;
     }

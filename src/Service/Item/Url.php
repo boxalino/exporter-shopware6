@@ -2,6 +2,7 @@
 namespace Boxalino\Exporter\Service\Item;
 
 use Boxalino\Exporter\Service\Component\Product;
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Shopware\Core\Defaults;
 use Shopware\Core\Framework\Uuid\Uuid;
@@ -71,6 +72,13 @@ class Url extends ItemsAbstract
             ->setParameter('live', Uuid::fromHexToBytes(Defaults::LIVE_VERSION))
             ->setFirstResult(($page - 1) * Product::EXPORTER_STEP)
             ->setMaxResults(Product::EXPORTER_STEP);
+
+        $productIds = $this->getExportedProductIds();
+        if(!empty($productIds))
+        {
+            $query->andWhere('product.id IN (:ids)')
+                ->setParameter('ids', Uuid::fromHexToBytesList($productIds), Connection::PARAM_STR_ARRAY);
+        }
 
         return $query;
     }

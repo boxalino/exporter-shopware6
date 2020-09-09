@@ -36,7 +36,6 @@ class Review extends ItemsAbstract
 
     public function getItemRelationQuery(int $page = 1): QueryBuilder
     {
-        $productIds = $this->getExportedProductIds();
         $query = $this->connection->createQueryBuilder();
         $query->select($this->getRequiredFields())
             ->from("product_review")
@@ -44,13 +43,18 @@ class Review extends ItemsAbstract
             ->andWhere('product_review.product_version_id = :live')
             #->andWhere('product_review.sales_channel_id = :channel') #by default - the channel is not used to filter out reviews
             ->andWhere('product_review.status = 1')
-            ->andWhere('product.id IN (:ids) OR product.parent_id IN (:ids)')
             ->addGroupBy('IFNULL(product.parent_id, product.id)')
-            ->setParameter('ids', Uuid::fromHexToBytesList($productIds), Connection::PARAM_STR_ARRAY)
             ->setParameter("channel", Uuid::fromHexToBytes($this->getChannelId()), ParameterType::BINARY)
             ->setParameter('live', Uuid::fromHexToBytes(Defaults::LIVE_VERSION), ParameterType::BINARY)
             ->setFirstResult(($page - 1) * Product::EXPORTER_STEP)
             ->setMaxResults(Product::EXPORTER_STEP);
+
+        $productIds = $this->getExportedProductIds();
+        if(!empty($productIds))
+        {
+            $query->andWhere('product.id IN (:ids)')
+                ->setParameter('ids', Uuid::fromHexToBytesList($productIds), Connection::PARAM_STR_ARRAY);
+        }
 
         return $query;
     }
