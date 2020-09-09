@@ -47,24 +47,24 @@ class ExporterScheduler
      * @param string $type
      * @return string
      */
-    public function getLastExportByAccountType(string $account, string $type) : ?string
+    public function getLastExportByAccountStatus(string $account, string $status) : ?string
     {
         $query = $this->connection->createQueryBuilder();
         $query->select(['export_date'])
             ->from("boxalino_export")
             ->andWhere("account = :account")
-            ->andWhere("type = :type")
-            ->orderBy("export_date", "DESC")
+            ->andWhere("status = :status")
+            ->orderBy("STR_TO_DATE(export_date, '%Y-%m-%d %H:%i:%s')", "DESC")
             ->setMaxResults(1)
             ->setParameter("account", $account)
-            ->setParameter("type", $type);
+            ->setParameter("status", $status);
         $latestRecord = $query->execute()->fetchColumn();
-        if(empty($latestRecord['export_date']) || is_null($latestRecord['export_date']))
+        if(empty($latestRecord) || is_null($latestRecord))
         {
             return null;
         }
 
-        return $latestRecord['export_date'];
+        return $latestRecord;
     }
 
     /**
@@ -80,18 +80,18 @@ class ExporterScheduler
             ->andWhere("account = :account")
             ->andWhere("status = :status")
             ->andWhere("type = :type")
-            ->orderBy("export_date", "DESC")
+            ->orderBy("STR_TO_DATE(export_date, '%Y-%m-%d %H:%i:%s')", "DESC")
             ->setMaxResults(1)
             ->setParameter("account", $account)
             ->setParameter("type", $type)
             ->setParameter("status", self::BOXALINO_EXPORTER_STATUS_SUCCESS);
         $latestRecord = $query->execute()->fetchColumn();
-        if(empty($latestRecord['export_date']) || is_null($latestRecord['export_date']))
+        if(empty($latestRecord) || is_null($latestRecord))
         {
             return null;
         }
 
-        return $latestRecord['export_date'];
+        return $latestRecord;
     }
 
     /**
@@ -165,23 +165,6 @@ class ExporterScheduler
         }
 
         return true;
-    }
-
-    /**
-     * @param string $account
-     * @return mixed
-     */
-    public function getLatestFullExportPerAccount(string $account)
-    {
-        $latestRunOnAccount = $this->connection->createQueryBuilder();
-        $latestRunOnAccount->select(['export_date'])
-            ->from('boxalino_export')
-            ->andWhere('account = :account')
-            ->andWhere('type = :type')
-            ->setParameter('account', $account)
-            ->setParameter('type', self::BOXALINO_EXPORTER_TYPE_FULL);
-
-        return $latestRunOnAccount->execute()->fetchColumn($latestRunOnAccount);
     }
 
     /**

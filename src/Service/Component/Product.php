@@ -110,6 +110,11 @@ class Product extends ExporterComponentAbstract
      */
     protected $itemExportersList;
 
+    /**
+     * @var ExporterScheduler
+     */
+    protected $scheduler;
+
     public function __construct(
         ComponentResource $resource,
         Connection $connection,
@@ -126,7 +131,8 @@ class Product extends ExporterComponentAbstract
         Review $reviewsExporter,
         Translation $translationExporter,
         Tag $tagExporter,
-        Visibility $visibilityExporter
+        Visibility $visibilityExporter,
+        ExporterScheduler $scheduler
     ){
         $this->itemExportersList = new \ArrayObject();
         $this->optionExporter = $optionExporter;
@@ -141,6 +147,7 @@ class Product extends ExporterComponentAbstract
         $this->translationExporter = $translationExporter;
         $this->tagExporter = $tagExporter;
         $this->visibilityExporter = $visibilityExporter;
+        $this->scheduler = $scheduler;
 
         parent::__construct($resource, $connection, $boxalinoLogger, $exporterConfigurator);
     }
@@ -178,7 +185,8 @@ class Product extends ExporterComponentAbstract
                 ->setFirstResult(($page - 1) * self::EXPORTER_STEP)
                 ->setMaxResults(self::EXPORTER_STEP);
 
-            if ($this->getIsDelta()) {
+            if ($this->getIsDelta())
+            {
                 $query->andWhere('p.updated_at > :lastExport')
                     ->setParameter('lastExport', $this->getLastExport());
             }
@@ -216,17 +224,19 @@ class Product extends ExporterComponentAbstract
         }
 
         $endExport =  (microtime(true) - $startExport) * 1000;
-        $this->logger->info("BoxalinoExporter: MAIN PRODUCT DATA EXPORT TOOK: $endExport ms, memory: " . memory_get_usage(true));
-        if($page==0)
+        $this->logger->info("BoxalinoExporter: MAIN PRODUCT DATA EXPORT FOR $totalCount PRODUCTS TOOK: $endExport ms, memory (MB): "
+            . round(memory_get_usage(true)/1048576,2)
+        );
+        if($totalCount == 0)
         {
-            $this->logger->info("BoxalinoExporter: NO PRODUCTS WERE FOUND FOR THE EXPORT.");
+            $this->logger->info("BoxalinoExporter: NO PRODUCTS FOUND.");
             $this->setSuccessOnComponentExport(false);
             return $this;
         }
 
         $this->defineProperties($exportFields);
 
-        $this->logger->info("BoxalinoExporter: -- Main product after memory: " . memory_get_usage(true));
+        $this->logger->info("BoxalinoExporter: -- Main product after memory: ". round(memory_get_usage(true)/1048576,2));
         $this->logger->info("BoxalinoExporter: Finished products - main.");
 
         $this->setSuccessOnComponentExport(true);
@@ -288,7 +298,7 @@ class Product extends ExporterComponentAbstract
             ->setLibrary($this->getLibrary())
             ->setExportedProductIds($this->exportedProductIds);
         $exporter->export();
-        $this->logger->info("BoxalinoExporter: MEMORY AFTER {$step}: " . memory_get_usage(true));
+        $this->logger->info("BoxalinoExporter: MEMORY (MB) AFTER {$step}: " . round(memory_get_usage(true)/1048576,2));
     }
 
     /**
@@ -390,24 +400,15 @@ class Product extends ExporterComponentAbstract
     /**
      * @return string
      */
-    protected function getLastExport()
+    public function getLastExport()
     {
         if (empty($this->lastExport))
         {
             $this->lastExport = date("Y-m-d H:i:s", strtotime("-1 day"));
-            $query = $this->connection->createQueryBuilder();
-            $query->select(['export_date'])
-                ->from('boxalino_export')
-                ->andWhere('account = :account')
-                ->andWhere('status = :status')
-                ->orderBy('created_at', 'DESC')
-                ->setMaxResults(1)
-                ->setParameter('account', $this->getAccount(), ParameterType::STRING)
-                ->setParameter('status', ExporterScheduler::BOXALINO_EXPORTER_STATUS_SUCCESS);
-            $latestExport = $query->execute();
-            if($latestExport['export_date'])
+            $latestExport = $this->scheduler->getLastExportByAccountStatus($this->getAccount(), ExporterScheduler::BOXALINO_EXPORTER_STATUS_SUCCESS);
+            if(!is_null($latestExport))
             {
-                $this->lastExport = $latestExport['export_date'];
+                $this->lastExport = $latestExport;
             }
         }
 
@@ -463,6 +464,14 @@ class Product extends ExporterComponentAbstract
         return $row['parent_id'];
     }
 
+    /**
+     * Extension to the product export
+     * Can be used in the XML DI declaration in order to add new elements to the exported component
+     * (if it is not a single table)
+     *
+     * @param ItemsAbstract $extraExporter
+     * @return $this
+     */
     public function addItemExporter(ItemsAbstract $extraExporter)
     {
         $this->itemExportersList->append($extraExporter);

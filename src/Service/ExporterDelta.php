@@ -1,10 +1,9 @@
 <?php
 namespace Boxalino\Exporter\Service;
 
-use Boxalino\Exporter\Service\ExporterScheduler;
-
 /**
  * Class ExporterDelta
+ *
  * @package Boxalino\Exporter\Service
  */
 class ExporterDelta extends ExporterManager
@@ -16,11 +15,6 @@ class ExporterDelta extends ExporterManager
      * Default server timeout
      */
     const SERVER_TIMEOUT_DEFAULT = 60;
-
-    /**
-     * @var array
-     */
-    protected $ids = [];
 
     /**
      * @return string
@@ -82,7 +76,7 @@ class ExporterDelta extends ExporterManager
      */
     public function getIds() : array
     {
-        return $this->deltaIds;
+        return $this->ids;
     }
 
     /**

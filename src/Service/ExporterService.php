@@ -96,12 +96,12 @@ class ExporterService
             $this->exportCustomers();
             $this->exportOrders();
 
-            if (!$this->productExporter->getSuccessOnComponentExport())
+            if ($this->productExporter->getSuccessOnComponentExport())
             {
-                $this->logger->info('BoxalinoExporter: NO PRODUCTS FOUND. Export finished on account: ' . $account);
-            } else {
                 $this->prepareXmlConfigurations();
                 $this->pushToDI();
+            } else {
+                $this->logger->info('BoxalinoExporter: NO PRODUCTS FOUND. Export finished on account: ' . $account);
             }
 
             $this->logger->info("BoxalinoExporter: End of Boxalino {$this->getType()} data sync on account {$account}");

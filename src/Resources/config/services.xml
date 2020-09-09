@@ -83,6 +83,7 @@
             <argument type="service" id="boxalino.exporter.component.product.translation"/>
             <argument type="service" id="boxalino.exporter.component.product.tag"/>
             <argument type="service" id="boxalino.exporter.component.product.visibility"/>
+            <argument type="service"  id="boxalino.exporter.scheduler"/>
         </service>
 
         <service id="boxalino.exporter.component.product.property.translation" class="Boxalino\Exporter\Service\Item\PropertyTranslation" parent="boxalino.exporter.component.item" abstract="true"/>

@@ -2,8 +2,6 @@
 namespace Boxalino\Exporter\Service;
 
 use Boxalino\Exporter\Service\Util\Configuration;
-use Boxalino\Exporter\Service\ExporterService;
-use Boxalino\Exporter\Service\ExporterScheduler;
 use \Psr\Log\LoggerInterface;
 
 /**
@@ -24,11 +22,6 @@ abstract class ExporterManager
      * @var Configuration containing the access to the configuration of each store to export
      */
     protected $config = null;
-
-    /**
-     * @var []
-     */
-    protected $deltaIds = [];
 
     /**
      * @var ExporterScheduler
@@ -54,6 +47,11 @@ abstract class ExporterManager
      * @var string
      */
     protected $exportPath;
+
+    /**
+     * @var array
+     */
+    protected $ids = [];
 
     /**
      * ExporterManager constructor.
@@ -158,10 +156,10 @@ abstract class ExporterManager
     /**
      * Get indexer latest updated at
      *
-     * @param string $account
+     * @param string | null $account
      * @return string
      */
-    public function getLastSuccessfulExport(string $account) : string
+    public function getLastSuccessfulExport(string $account) : ?string
     {
         return $this->scheduler->getLastSuccessfulExportByTypeAccount($this->getType(), $account);
     }
@@ -173,6 +171,12 @@ abstract class ExporterManager
     public function setAccount(string $account) : self
     {
         $this->account = $account;
+        return $this;
+    }
+
+    public function setIds(array $ids) : self
+    {
+        $this->ids = $ids;
         return $this;
     }
 
