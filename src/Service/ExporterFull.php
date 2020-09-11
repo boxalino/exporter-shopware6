@@ -9,25 +9,26 @@ use Boxalino\Exporter\Service\ExporterScheduler;
  * @package Boxalino\Exporter\Service
  */
 class ExporterFull extends ExporterManager
+    implements ExporterFullInterface
 {
-
-    const EXPORTER_ID = 'boxalino.exporter.full';
 
     /**
      * Default server timeout
      */
     const SERVER_TIMEOUT_DEFAULT = 300;
 
+    /**
+     * @return string
+     */
     public function getType(): string
     {
         return ExporterScheduler::BOXALINO_EXPORTER_TYPE_FULL;
     }
 
-    public function getExporterId(): string
-    {
-        return self::EXPORTER_ID;
-    }
-
+    /**
+     * @param string $account
+     * @return bool
+     */
     public function exportDeniedOnAccount(string $account) : bool
     {
         return false;
@@ -49,7 +50,6 @@ class ExporterFull extends ExporterManager
         return self::SERVER_TIMEOUT_DEFAULT;
     }
 
-
     /**
      * Full export does not care for ids -- everything is exported
      *
@@ -63,9 +63,9 @@ class ExporterFull extends ExporterManager
     /**
      * @return bool
      */
-    public function getExportFull() : bool
+    public function isDelta() : bool
     {
-        return true;
+        return false;
     }
 
 }

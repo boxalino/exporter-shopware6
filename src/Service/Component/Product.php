@@ -16,7 +16,7 @@ use Boxalino\Exporter\Service\Item\Url;
 use Boxalino\Exporter\Service\Item\Review;
 use Boxalino\Exporter\Service\Item\Visibility;
 use Boxalino\Exporter\Service\Delta\ProductStateRecognitionInterface;
-use Boxalino\Exporter\Service\Util\Configuration;
+use Boxalino\Exporter\Service\ExporterConfigurationInterface;
 use Boxalino\Exporter\Service\Item\Tag;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
@@ -35,15 +35,6 @@ use Shopware\Core\Framework\Uuid\Uuid;
 class Product extends ExporterComponentAbstract
     implements ProductComponentInterface
 {
-
-    CONST EXPORTER_LIMIT = 10000000;
-    CONST EXPORTER_STEP = 10000;
-    CONST EXPORTER_DATA_SAVE_STEP = 1000;
-
-    CONST EXPORTER_COMPONENT_MAIN_FILE = "products.csv";
-    CONST EXPORTER_COMPONENT_TYPE = "products";
-    CONST EXPORTER_COMPONENT_ID_FIELD = "id";
-
     protected $lastExport;
     protected $exportedProductIds = [];
     protected $deltaIds = [];
@@ -122,7 +113,7 @@ class Product extends ExporterComponentAbstract
         ComponentResource $resource,
         Connection $connection,
         LoggerInterface $boxalinoLogger,
-        Configuration $exporterConfigurator,
+        ExporterConfigurationInterface $exporterConfigurator,
         Category $categoryExporter,
         Property $facetExporter,
         Option $optionExporter,
@@ -158,13 +149,14 @@ class Product extends ExporterComponentAbstract
     public function exportComponent()
     {
         /** defaults */
+        $this->config->setAccount($this->getAccount());
         $header = true; $data = []; $totalCount = 0; $page = 1; $exportFields=[]; $startExport = microtime(true);
         $this->logger->info("BoxalinoExporter: Preparing products - MAIN.");
         $properties = $this->getFields();
-        $rootCategoryId = $this->config->getChannelRootCategoryId($this->getAccount());
-        $defaultLanguageId = $this->config->getChannelDefaultLanguageId($this->getAccount());
+        $rootCategoryId = $this->config->getChannelRootCategoryId();
+        $defaultLanguageId = $this->config->getChannelDefaultLanguageId();
 
-        while (self::EXPORTER_LIMIT > $totalCount + self::EXPORTER_STEP)
+        while (ProductComponentInterface::EXPORTER_LIMIT > $totalCount + ProductComponentInterface::EXPORTER_STEP)
         {
             $this->logger->info("BoxalinoExporter: Products export - OFFSET " . $totalCount);
             $query = $this->connection->createQueryBuilder();
@@ -184,8 +176,8 @@ class Product extends ExporterComponentAbstract
                 ->setParameter('live', Uuid::fromHexToBytes(Defaults::LIVE_VERSION), ParameterType::BINARY)
                 ->setParameter('channelRootCategoryId', $rootCategoryId, ParameterType::STRING)
                 ->setParameter('defaultLanguage', Uuid::fromHexToBytes($defaultLanguageId), ParameterType::BINARY)
-                ->setFirstResult(($page - 1) * self::EXPORTER_STEP)
-                ->setMaxResults(self::EXPORTER_STEP);
+                ->setFirstResult(($page - 1) * ProductComponentInterface::EXPORTER_STEP)
+                ->setMaxResults(ProductComponentInterface::EXPORTER_STEP);
 
             if ($this->getIsDelta())
             {
@@ -212,7 +204,7 @@ class Product extends ExporterComponentAbstract
                     $exportFields = array_keys($row); $this->setHeaderFields($exportFields); $data[] = $exportFields; $header = false;
                 }
                 $data[] = $row;
-                if(count($data) > self::EXPORTER_DATA_SAVE_STEP)
+                if(count($data) > ProductComponentInterface::EXPORTER_DATA_SAVE_STEP)
                 {
                     $this->getFiles()->savePartToCsv($this->getComponentMainFile(), $data);
                     $data = [];
@@ -221,7 +213,7 @@ class Product extends ExporterComponentAbstract
 
             $this->getFiles()->savePartToCsv($this->getComponentMainFile(), $data);
             $data = []; $page++;
-            if($count < self::EXPORTER_STEP - 1) { break;}
+            if($count < ProductComponentInterface::EXPORTER_STEP - 1) { break;}
         }
 
         $endExport =  (microtime(true) - $startExport) * 1000;
@@ -268,12 +260,12 @@ class Product extends ExporterComponentAbstract
         $this->_exportExtra("tags", $this->tagExporter);
         $this->_exportExtra("visibility", $this->visibilityExporter);
 
-        if ($this->config->exportProductImages($this->getAccount()))
+        if ($this->config->exportProductImages())
         {
             $this->_exportExtra("media", $this->imagesExporter);
         }
 
-        if ($this->config->exportProductUrl($this->getAccount()))
+        if ($this->config->exportProductUrl())
         {
             $this->_exportExtra("urls", $this->urlExporter);
         }

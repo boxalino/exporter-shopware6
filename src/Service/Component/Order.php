@@ -14,18 +14,10 @@ use Shopware\Core\Framework\Uuid\Uuid;
 class Order extends ExporterComponentAbstract
     implements OrderComponentInterface
 {
-
-    CONST EXPORTER_LIMIT = 10000000;
-    CONST EXPORTER_STEP = 5000;
-    CONST EXPORTER_DATA_SAVE_STEP = 1000;
-
-    CONST EXPORTER_COMPONENT_ID_FIELD = "order_id";
-    CONST EXPORTER_COMPONENT_TYPE = "transactions";
-    CONST EXPORTER_COMPONENT_MAIN_FILE = "transactions.csv";
-
+    
     public function export()
     {
-        if (!$this->config->isTransactionsExportEnabled($this->account)) {
+        if (!$this->config->isTransactionsExportEnabled()) {
             $this->logger->info("BoxalinoExporter: the transactions are disabled for the exporter.");
             return true;
         }
@@ -43,11 +35,11 @@ class Order extends ExporterComponentAbstract
         $orderStateMachineId = $this->getOrderStateMachineId();
         $orderDeliveryStateMachineId = $this->getOrderDeliveryStateMachineId();
         $orderTransactionStateMachineId = $this->getOrderTransactionStateMachineId();
-        $defaultLanguageId = $this->config->getChannelDefaultLanguageId($this->getAccount());
-        $isIncremental = $this->config->getExportTransactionIncremental($this->getAccount());
+        $defaultLanguageId = $this->config->getChannelDefaultLanguageId();
+        $isIncremental = $this->config->isTransactionExportIncremental();
 
         $header = true; $totalCount = 0;  $page = 1;
-        while (self::EXPORTER_LIMIT > $totalCount + self::EXPORTER_STEP)
+        while (OrderComponentInterface::EXPORTER_LIMIT > $totalCount + OrderComponentInterface::EXPORTER_STEP)
         {
             $data = [];
             $this->logger->info("BoxalinoExporter: Transactions export - OFFSET " . $totalCount);
@@ -110,7 +102,7 @@ class Order extends ExporterComponentAbstract
                 ->andWhere('order_line_item.version_id = :liveOLI')
                 ->andWhere('order_line_item.order_version_id = :liveO')
                 ->orderBy('`order`.order_date_time', 'DESC')
-                ->setParameter('channelId', Uuid::fromHexToBytes($this->config->getAccountChannelId($this->getAccount())), ParameterType::BINARY)
+                ->setParameter('channelId', Uuid::fromHexToBytes($this->config->getChannelId()), ParameterType::BINARY)
                 ->setParameter('liveOLI',  Uuid::fromHexToBytes(Defaults::LIVE_VERSION), ParameterType::BINARY)
                 ->setParameter('liveO',  Uuid::fromHexToBytes(Defaults::LIVE_VERSION), ParameterType::BINARY)
                 #->setParameter('language', $language, ParameterType::STRING)
@@ -118,8 +110,8 @@ class Order extends ExporterComponentAbstract
                 ->setParameter('orderTransactionStateMachineId', $orderTransactionStateMachineId, ParameterType::BINARY)
                 ->setParameter('orderDeliveryStateMachineId', $orderDeliveryStateMachineId, ParameterType::BINARY)
                 ->setParameter('orderStateMachineId', $orderStateMachineId, ParameterType::BINARY)
-                ->setFirstResult(($page - 1) * self::EXPORTER_STEP)
-                ->setMaxResults(self::EXPORTER_STEP);
+                ->setFirstResult(($page - 1) * OrderComponentInterface::EXPORTER_STEP)
+                ->setMaxResults(OrderComponentInterface::EXPORTER_STEP);
 
             if ($isIncremental == 1) {
                 $query->andWhere('`order`.order_time >= ?', date("Y-m-d", strtotime("-1 month")));
@@ -142,7 +134,7 @@ class Order extends ExporterComponentAbstract
                     $header = false;
                 }
                 $data[] = $row;
-                if(count($data) > self::EXPORTER_DATA_SAVE_STEP)
+                if(count($data) > OrderComponentInterface::EXPORTER_DATA_SAVE_STEP)
                 {
                     $this->getFiles()->savePartToCsv($this->getComponentMainFile(), $data);
                     $data = [];
@@ -152,7 +144,7 @@ class Order extends ExporterComponentAbstract
             $this->getFiles()->savePartToCsv($this->getComponentMainFile(), $data);
             $this->logger->info("BoxalinoExporter: Transaction export - Current page: {$page}, data count: {$totalCount}");
             $data=[]; $page++;
-            if($count < self::EXPORTER_STEP - 1)
+            if($count < OrderComponentInterface::EXPORTER_STEP - 1)
             {
                 $this->setSuccessOnComponentExport(true);
                 break;

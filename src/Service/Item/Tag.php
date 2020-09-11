@@ -1,7 +1,7 @@
 <?php
 namespace Boxalino\Exporter\Service\Item;
 
-use Boxalino\Exporter\Service\Component\Product;
+use Boxalino\Exporter\Service\Component\ProductComponentInterface;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use Shopware\Core\Defaults;
@@ -21,6 +21,7 @@ class Tag extends ItemsAbstract
     public function export()
     {
         $this->logger->info("BoxalinoExporter: Preparing products - START TAG EXPORT.");
+        $this->config->setAccount($this->getAccount());
         $query = $this->connection->createQueryBuilder();
         $query->select(["LOWER(HEX(id)) AS {$this->getPropertyIdField()}", "name AS value"])
             ->from("tag");
@@ -55,8 +56,8 @@ class Tag extends ItemsAbstract
             ->andWhere("JSON_SEARCH(product.category_tree, 'one', :channelRootCategoryId) IS NOT NULL")
             ->setParameter('live', Uuid::fromHexToBytes(Defaults::LIVE_VERSION), ParameterType::BINARY)
             ->setParameter('channelRootCategoryId', $this->getRootCategoryId(), ParameterType::STRING)
-            ->setFirstResult(($page - 1) * Product::EXPORTER_STEP)
-            ->setMaxResults(Product::EXPORTER_STEP);
+            ->setFirstResult(($page - 1) * ProductComponentInterface::EXPORTER_STEP)
+            ->setMaxResults(ProductComponentInterface::EXPORTER_STEP);
 
         $productIds = $this->getExportedProductIds();
         if(!empty($productIds))

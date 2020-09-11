@@ -1,7 +1,6 @@
 <?php
 namespace Boxalino\Exporter\Service;
 
-use Boxalino\Exporter\Service\Util\Configuration;
 use \Psr\Log\LoggerInterface;
 
 /**
@@ -19,9 +18,9 @@ abstract class ExporterManager
     protected $logger;
 
     /**
-     * @var Configuration containing the access to the configuration of each store to export
+     * @var ExporterConfigurationInterface
      */
-    protected $config = null;
+    protected $config;
 
     /**
      * @var ExporterScheduler
@@ -29,24 +28,9 @@ abstract class ExporterManager
     protected $scheduler;
 
     /**
-     * @var null
-     */
-    protected $latestRun = null;
-
-    /**
-     * @var null
-     */
-    protected $account = null;
-
-    /**
-     * @var ExporterService
+     * @var ExporterServiceInterface
      */
     protected $exporterService;
-
-    /**
-     * @var string
-     */
-    protected $exportPath;
 
     /**
      * @var array
@@ -54,25 +38,28 @@ abstract class ExporterManager
     protected $ids = [];
 
     /**
+     * @var null | string
+     */
+    protected $account = null;
+
+    /**
      * ExporterManager constructor.
      * @param LoggerInterface $boxalinoLogger
-     * @param Configuration $exporterConfigurator
+     * @param ExporterConfigurationInterface $exporterConfigurator
      * @param \Boxalino\Exporter\Service\ExporterScheduler $scheduler
-     * @param \Boxalino\Exporter\Service\ExporterService $exporterService
+     * @param \Boxalino\Exporter\Service\ExporterServiceInterface $exporterService
      * @param string $exportPath
      */
     public function __construct(
         LoggerInterface $boxalinoLogger,
-        Configuration $exporterConfigurator,
+        ExporterConfigurationInterface $exporterConfigurator,
         ExporterScheduler $scheduler,
-        ExporterService $exporterService,
-        string $exportPath
+        ExporterServiceInterface $exporterService
     ) {
         $this->config = $exporterConfigurator;
         $this->logger = $boxalinoLogger;
         $this->scheduler = $scheduler;
         $this->exporterService = $exporterService;
-        $this->exportPath = $exportPath;
     }
 
     /**
@@ -93,7 +80,7 @@ abstract class ExporterManager
         $exporterHasRun = false;
         foreach($accounts as $account)
         {
-            $this->logger->info($account);
+            $this->config->setAccount($account);
             try{
                 if($this->exportAllowedByAccount($account))
                 {
@@ -101,10 +88,8 @@ abstract class ExporterManager
                     $this->exporterService
                         ->setAccount($account)
                         ->setType($this->getType())
-                        ->setExporterId($this->getExporterId())
-                        ->setIsFull($this->getExportFull())
+                        ->setIsDelta($this->isDelta())
                         ->setTimeout($this->getTimeout($account))
-                        ->setDirectory($this->exportPath)
                         ->export();
                 }
             } catch (\Exception $exception) {
@@ -115,6 +100,7 @@ abstract class ExporterManager
 
         if(!$exporterHasRun)
         {
+            $this->logger->warning("BoxalinoExporterManager: The {$this->getType()} exporter did not run. Execution feedback: " . implode("\n", $errorMessages));
             return false;
         }
 
@@ -123,10 +109,13 @@ abstract class ExporterManager
             return true;
         }
 
-        throw new \Exception("BoxalinoExporter: export failed with messages: " . implode(",", $errorMessages));
+        throw new \Exception("BoxalinoExporterManager: export failed with messages: " . implode(",", $errorMessages));
     }
 
-
+    /**
+     * @param string $account
+     * @return bool
+     */
     public function exportAllowedByAccount(string $account) : bool
     {
         if($this->scheduler->canStartExport($this->getType(), $account) && !$this->exportDeniedOnAccount($account))
@@ -174,6 +163,10 @@ abstract class ExporterManager
         return $this;
     }
 
+    /**
+     * @param array $ids
+     * @return $this
+     */
     public function setIds(array $ids) : self
     {
         $this->ids = $ids;
@@ -184,7 +177,6 @@ abstract class ExporterManager
     abstract function getIds() : array;
     abstract function exportDeniedOnAccount(string $account) : bool;
     abstract function getType() : string;
-    abstract function getExporterId() : string;
-    abstract function getExportFull() : bool;
+    abstract function isDelta() : bool;
 
 }

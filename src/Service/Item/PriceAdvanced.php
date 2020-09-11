@@ -1,12 +1,12 @@
 <?php
 namespace Boxalino\Exporter\Service\Item;
 
+use Boxalino\Exporter\Service\ExporterConfigurationInterface;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Shopware\Core\Checkout\Cart\Rule\CartAmountRule;
 use Shopware\Core\Checkout\Cart\Price\Struct\CartPrice;
 use Shopware\Core\Framework\Rule\Rule;
-use Boxalino\Exporter\Service\Component\Product;
-use Boxalino\Exporter\Service\Util\Configuration;
+use Boxalino\Exporter\Service\Component\ProductComponentInterface;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use Psr\Log\LoggerInterface;
@@ -42,7 +42,7 @@ class PriceAdvanced extends ItemsAbstract
     public function __construct(
         Connection $connection,
         LoggerInterface $boxalinoLogger,
-        Configuration $exporterConfigurator,
+        ExporterConfigurationInterface $exporterConfigurator,
         SalesChannelContextServiceInterface $salesChannelContextService
     ){
         $this->rules = new \ArrayObject();
@@ -52,8 +52,7 @@ class PriceAdvanced extends ItemsAbstract
 
     public function export()
     {
-        $this->logger->info("BoxalinoExporter: Preparing products - START ADVANCED PRICE EXPORT FOR "
-            . $this->rules->count() . " rules");
+        $this->logger->info("BoxalinoExporter: Preparing products - START ADVANCED PRICE EXPORT FOR " . $this->rules->count() . " rules");
         foreach($this->rules as $rule)
         {
             $this->rule = $rule;
@@ -91,8 +90,8 @@ class PriceAdvanced extends ItemsAbstract
             ->addGroupBy('product_price.product_id')
             ->setParameter('live', Uuid::fromHexToBytes(Defaults::LIVE_VERSION), ParameterType::BINARY)
             ->setParameter('priceRuleType', $this->rule->getName(), ParameterType::STRING)
-            ->setFirstResult(($page - 1) * Product::EXPORTER_STEP)
-            ->setMaxResults(Product::EXPORTER_STEP);
+            ->setFirstResult(($page - 1) * ProductComponentInterface::EXPORTER_STEP)
+            ->setMaxResults(ProductComponentInterface::EXPORTER_STEP);
 
         $productIds = $this->getExportedProductIds();
         if(!empty($productIds))

@@ -1,8 +1,8 @@
 <?php
 namespace Boxalino\Exporter\Service\Item;
 
-use Boxalino\Exporter\Service\Component\Product;
-use Boxalino\Exporter\Service\Util\Configuration;
+use Boxalino\Exporter\Service\Component\ProductComponentInterface;
+use Boxalino\Exporter\Service\ExporterConfigurationInterface;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use Psr\Log\LoggerInterface;
@@ -47,14 +47,14 @@ class Media extends ItemsAbstract
      * Media constructor.
      * @param Connection $connection
      * @param LoggerInterface $boxalinoLogger
-     * @param Configuration $exporterConfigurator
+     * @param ExporterConfigurationInterface $exporterConfigurator
      * @param UrlGeneratorInterface $generator
      * @param MediaRepositoryDecorator $mediaRepository
      */
     public function __construct(
         Connection $connection,
         LoggerInterface $boxalinoLogger,
-        Configuration $exporterConfigurator,
+        ExporterConfigurationInterface $exporterConfigurator,
         UrlGeneratorInterface $generator,
         EntityRepositoryInterface $mediaRepository
     ){
@@ -67,8 +67,9 @@ class Media extends ItemsAbstract
     public function export()
     {
         $this->logger->info("BoxalinoExporter: Preparing products - START PRODUCT IMAGES EXPORT.");
+        $this->config->setAccount($this->getAccount());
         $totalCount = 0; $page = 1; $header = true; $data=[];
-        while (Product::EXPORTER_LIMIT > $totalCount + Product::EXPORTER_STEP)
+        while (ProductComponentInterface::EXPORTER_LIMIT > $totalCount + ProductComponentInterface::EXPORTER_STEP)
         {
             $query = $this->getItemRelationQuery($page);
             $count = $query->execute()->rowCount();
@@ -111,13 +112,13 @@ class Media extends ItemsAbstract
                 $data = array_merge($this->getItemRelationHeaderColumns(), $data);
             }
 
-            foreach(array_chunk($data, Product::EXPORTER_DATA_SAVE_STEP) as $dataSegment)
+            foreach(array_chunk($data, ProductComponentInterface::EXPORTER_DATA_SAVE_STEP) as $dataSegment)
             {
                 $this->getFiles()->savePartToCsv($this->getItemRelationFile(), $dataSegment);
             }
 
             $data = []; $page++;
-            if($count < Product::EXPORTER_STEP - 1) { break;}
+            if($count < ProductComponentInterface::EXPORTER_STEP - 1) { break;}
         }
 
         $this->setFilesDefinitions();
@@ -145,8 +146,8 @@ class Media extends ItemsAbstract
             ->andWhere('product_media.version_id = :live')
             ->addGroupBy('product_media.product_id')
             ->setParameter('live', Uuid::fromHexToBytes(Defaults::LIVE_VERSION), ParameterType::BINARY)
-            ->setFirstResult(($page - 1) * Product::EXPORTER_STEP)
-            ->setMaxResults(Product::EXPORTER_STEP);
+            ->setFirstResult(($page - 1) * ProductComponentInterface::EXPORTER_STEP)
+            ->setMaxResults(ProductComponentInterface::EXPORTER_STEP);
 
         $productIds = $this->getExportedProductIds();
         if(!empty($productIds))

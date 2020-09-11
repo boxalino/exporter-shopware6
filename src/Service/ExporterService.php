@@ -5,7 +5,7 @@ use Boxalino\Exporter\Service\Component\CustomerComponentInterface;
 use Boxalino\Exporter\Service\Component\OrderComponentInterface;
 use Boxalino\Exporter\Service\Component\ProductComponentInterface;
 use Boxalino\Exporter\Service\ExporterScheduler;
-use Boxalino\Exporter\Service\Util\Configuration;
+use Boxalino\Exporter\Service\ExporterConfigurationInterface;
 use Boxalino\Exporter\Service\Util\FileHandler;
 use Boxalino\Exporter\Service\Util\ContentLibrary;
 use Doctrine\DBAL\Connection;
@@ -20,13 +20,18 @@ use Psr\Log\LoggerInterface;
  *
  * @package Boxalino\Exporter\Service
  */
-class ExporterService
+class ExporterService implements ExporterServiceInterface
 {
 
     /**
      * @var bool
      */
     protected $isFull = false;
+
+    /**
+     * @var bool
+     */
+    protected $isDelta = false;
 
     /**
      * @var null
@@ -36,7 +41,6 @@ class ExporterService
     protected $transactionExporter;
     protected $productExporter;
 
-    protected $directory = null;
     protected $logger;
     protected $scheduler;
     protected $fileHandler;
@@ -48,16 +52,21 @@ class ExporterService
     protected $exporterId;
     protected $timeout;
 
+    /**
+     * @var string
+     */
+    protected $exportPath;
 
     public function __construct(
         OrderComponentInterface $transactionExporter,
         CustomerComponentInterface $customerExporter,
         ProductComponentInterface $productExporter,
         LoggerInterface $boxalinoLogger,
-        Configuration $exporterConfigurator,
+        ExporterConfigurationInterface $exporterConfigurator,
         ContentLibrary $library,
         FileHandler $fileHandler,
-        ExporterScheduler $scheduler
+        ExporterScheduler $scheduler,
+        string $exportPath
     ) {
         $this->transactionExporter = $transactionExporter;
         $this->customerExporter = $customerExporter;
@@ -68,6 +77,7 @@ class ExporterService
         $this->library = $library;
         $this->fileHandler = $fileHandler;
         $this->scheduler = $scheduler;
+        $this->exportPath = $exportPath;
     }
 
     /**
@@ -78,17 +88,16 @@ class ExporterService
     {
         set_time_limit(7200);
         $account = $this->getAccount();
-        $directory = $this->getDirectory();
-
+        $this->configurator->setAccount($account);
         try {
-            if(empty($account) || empty($directory))
+            if(empty($account) || empty($this->exportPath))
             {
                 throw new \Exception("BoxalinoExporter: Cancelled Boxalino {$this->getType()} data sync. The account/directory path name can not be empty.");
             }
 
             $this->addSchedulerStatus(ExporterScheduler::BOXALINO_EXPORTER_STATUS_PROCESSING);
 
-            $this->logger->info("BoxalinoExporter: Exporting store ID : {$this->configurator->getAccountChannelId($account)}");
+            $this->logger->info("BoxalinoExporter: Exporting store ID : {$this->configurator->getChannelId()}");
             $this->initFiles();
             $this->initLibrary();
             $this->verifyCredentials();
@@ -130,7 +139,7 @@ class ExporterService
 
         $this->getFiles()->setAccount($this->getAccount())
             ->setType($this->getType())
-            ->setMainDir($this->getDirectory())
+            ->setMainDir($this->exportPath)
             ->init();
     }
 
@@ -142,10 +151,10 @@ class ExporterService
         $this->logger->info("BoxalinoExporter: Initialize content library for account: {$this->getAccount()}");
 
         $this->getLibrary()->setAccount($this->getAccount())
-            ->setPassword($this->configurator->getAccountPassword($this->getAccount()))
-            ->setIsDelta(!$this->getIsFull())
-            ->setUseDevIndex($this->configurator->useDevIndex($this->getAccount()))
-            ->setLanguages($this->configurator->getAccountLanguages($this->getAccount()));
+            ->setPassword($this->configurator->getPassword())
+            ->setIsDelta($this->getIsDelta())
+            ->setUseDevIndex($this->configurator->useDevIndex())
+            ->setLanguages($this->configurator->getLanguages());
     }
 
     /**
@@ -170,7 +179,7 @@ class ExporterService
      */
     protected function prepareXmlConfigurations() : void
     {
-        if (!$this->getIsFull())
+        if ($this->getIsDelta())
         {
             return;
         }
@@ -194,7 +203,7 @@ class ExporterService
         }
 
         $this->logger->info('BoxalinoExporter: Publish the configuration changes from the owner for account: ' . $this->getAccount());
-        if($this->configurator->publishConfigurationChanges($this->getAccount()))
+        if($this->configurator->publishConfigurationChanges())
         {
             $changes = $this->getLibrary()->publishChanges();
             if (!empty($changes) && sizeof($changes['changes']) > 0) {
@@ -216,7 +225,7 @@ class ExporterService
     {
         $this->logger->info('BoxalinoExporter: pushing the archive to DI for account: ' . $this->getAccount());
         try {
-            $this->getLibrary()->pushData($this->configurator->getExportTemporaryArchivePath($this->getAccount()), $this->getTimeout());
+            $this->getLibrary()->pushData($this->configurator->getExportTemporaryArchivePath(), $this->getTimeout());
         } catch(\LogicException $e){
             $this->logger->warning($e->getMessage());
         }
@@ -232,7 +241,7 @@ class ExporterService
             $this->productExporter->setAccount($this->getAccount())
                 ->setFiles($this->getFiles())
                 ->setLibrary($this->getLibrary())
-                ->setIsDelta(!$this->getIsFull())
+                ->setIsDelta($this->getIsDelta())
                 ->export();
         } catch(\Exception $exc)
         {
@@ -245,14 +254,16 @@ class ExporterService
      */
     public function exportCustomers() : void
     {
-        if($this->getIsFull())
+        if($this->getIsDelta())
         {
-            $this->logger->info("BoxalinoExporter: Preparing customers for account {$this->getAccount()}.");
-            $this->customerExporter->setFiles($this->getFiles())
-                ->setAccount($this->getAccount())
-                ->setLibrary($this->productExporter->getLibrary())
-                ->export();
+            return;
         }
+
+        $this->logger->info("BoxalinoExporter: Preparing customers for account {$this->getAccount()}.");
+        $this->customerExporter->setFiles($this->getFiles())
+            ->setAccount($this->getAccount())
+            ->setLibrary($this->productExporter->getLibrary())
+            ->export();
     }
 
     /**
@@ -260,14 +271,16 @@ class ExporterService
      */
     public function exportOrders() : void
     {
-        if($this->getIsFull())
+        if($this->getIsDelta())
         {
-            $this->logger->info("BoxalinoExporter: Preparing transactions for account {$this->getAccount()}.");
-            $this->transactionExporter->setFiles($this->getFiles())
-                ->setAccount($this->getAccount())
-                ->setLibrary($this->customerExporter->getLibrary())
-                ->export();
+            return;
         }
+
+        $this->logger->info("BoxalinoExporter: Preparing transactions for account {$this->getAccount()}.");
+        $this->transactionExporter->setFiles($this->getFiles())
+            ->setAccount($this->getAccount())
+            ->setLibrary($this->customerExporter->getLibrary())
+            ->export();
     }
 
     /**
@@ -287,46 +300,28 @@ class ExporterService
     }
 
     /**
+     * @param bool $value
+     * @return ExporterServiceInterface
+     */
+    public function setIsDelta(bool $value) : ExporterServiceInterface
+    {
+        $this->isDelta = $value;
+        return $this;
+    }
+
+    /**
      * @return bool
      */
-    public function getIsFull() : bool
+    public function getIsDelta() : bool
     {
-        return $this->isFull;
-    }
-
-    /**
-     * @param bool $value
-     * @return $this
-     */
-    public function setIsFull(bool $value)
-    {
-        $this->isFull = $value;
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getDirectory() : string
-    {
-        return $this->directory;
-    }
-
-    /**
-     * @param mixed $directory
-     * @return ExporterService
-     */
-    public function setDirectory(string $directory) : self
-    {
-        $this->directory = $directory;
-        return $this;
+        return $this->isDelta;
     }
 
     /**
      * @param string $value
-     * @return ExporterService
+     * @return ExporterServiceInterface
      */
-    public function setType(string $value) : self
+    public function setType(string $value) : ExporterServiceInterface
     {
         $this->type = $value;
         return $this;
@@ -358,9 +353,9 @@ class ExporterService
 
     /**
      * @param string $account
-     * @return $this
+     * @return ExporterServiceInterface
      */
-    public function setAccount(string $account)
+    public function setAccount(string $account) : ExporterServiceInterface
     {
         $this->account = $account;
         return $this;
@@ -376,9 +371,9 @@ class ExporterService
 
     /**
      * @param string $id
-     * @return ExporterService
+     * @return ExporterServiceInterface
      */
-    public function setExporterId(string $id) :self
+    public function setExporterId(string $id) : ExporterServiceInterface
     {
         $this->exporterId = $id;
         return $this;
@@ -386,9 +381,9 @@ class ExporterService
 
     /**
      * @param string $timeout
-     * @return ExporterService
+     * @return ExporterServiceInterface
      */
-    public function setTimeout(string $timeout) :self
+    public function setTimeout(string $timeout) : ExporterServiceInterface
     {
         $this->timeout = $timeout;
         return $this;

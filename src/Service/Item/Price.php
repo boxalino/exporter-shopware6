@@ -1,10 +1,10 @@
 <?php
 namespace Boxalino\Exporter\Service\Item;
 
+use Boxalino\Exporter\Service\ExporterConfigurationInterface;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Shopware\Core\Checkout\Cart\Price\Struct\CartPrice;
-use Boxalino\Exporter\Service\Component\Product;
-use Boxalino\Exporter\Service\Util\Configuration;
+use Boxalino\Exporter\Service\Component\ProductComponentInterface;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use Psr\Log\LoggerInterface;
@@ -33,7 +33,7 @@ class Price extends ItemsAbstract
     public function __construct(
         Connection $connection,
         LoggerInterface $boxalinoLogger,
-        Configuration $exporterConfigurator,
+        ExporterConfigurationInterface $exporterConfigurator,
         SalesChannelContextServiceInterface $salesChannelContextService
     ){
         $this->salesChannelContextService = $salesChannelContextService;
@@ -92,8 +92,8 @@ class Price extends ItemsAbstract
             ->andWhere('product.version_id = :live')
             ->addGroupBy('product.id')
             ->setParameter('live', Uuid::fromHexToBytes(Defaults::LIVE_VERSION), ParameterType::BINARY)
-            ->setFirstResult(($page - 1) * Product::EXPORTER_STEP)
-            ->setMaxResults(Product::EXPORTER_STEP);
+            ->setFirstResult(($page - 1) * ProductComponentInterface::EXPORTER_STEP)
+            ->setMaxResults(ProductComponentInterface::EXPORTER_STEP);
 
         $productIds = $this->getExportedProductIds();
         if(!empty($productIds))

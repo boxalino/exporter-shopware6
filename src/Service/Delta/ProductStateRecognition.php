@@ -6,7 +6,7 @@ use Doctrine\DBAL\Query\QueryBuilder;
 
 /**
  * Class ProductStateRecognition
- * @package Boxalino\Exporter\Service\Component\Delta
+ * @package Boxalino\Exporter\Service\Delta
  */
 class ProductStateRecognition implements ProductStateRecognitionInterface
 {

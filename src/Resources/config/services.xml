@@ -21,13 +21,13 @@
         <service id="Boxalino\Exporter\ScheduledTask\ExporterFullHandlerAbstract" abstract="true">
             <argument type="service" id="scheduled_task.repository" />
             <argument type="service" id="monolog.logger.boxalino-exporter"/>
-            <argument type="service" id="boxalino.exporter.full"/>
+            <argument type="service" id="Boxalino\Exporter\Service\ExporterFullInterface"/>
         </service>
 
         <!-- exporter service -->
         <service id="boxalino.exporter.util.file-handler" class="Boxalino\Exporter\Service\Util\FileHandler" />
         <service id="boxalino.exporter.util.library" class="Boxalino\Exporter\Service\Util\ContentLibrary" />
-        <service id="boxalino.exporter.util.configurator" class="Boxalino\Exporter\Service\Util\Configuration" parent="boxalino.shopware.util.configurator" />
+        <service id="Boxalino\Exporter\Service\ExporterConfigurationInterface" class="Boxalino\Exporter\Service\Util\Configuration" parent="boxalino.shopware.util.configurator" />
 
         <service id="boxalino.exporter.scheduler" class="Boxalino\Exporter\Service\ExporterScheduler" >
             <argument type="service" id="Doctrine\DBAL\Connection"/>
@@ -39,33 +39,33 @@
             <argument type="service" id="monolog.logger.boxalino-exporter"/>
         </service>
 
-        <service id="boxalino.exporter.service" class="Boxalino\Exporter\Service\ExporterService" >
+        <service id="Boxalino\Exporter\Service\ExporterServiceInterface" class="Boxalino\Exporter\Service\ExporterService" >
             <argument type="service" id="Boxalino\Exporter\Service\Component\OrderComponentInterface"/>
             <argument type="service" id="Boxalino\Exporter\Service\Component\CustomerComponentInterface"/>
             <argument type="service" id="Boxalino\Exporter\Service\Component\ProductComponentInterface"/>
             <argument type="service" id="monolog.logger.boxalino-exporter"/>
-            <argument type="service" id="boxalino.exporter.util.configurator"/>
+            <argument type="service" id="Boxalino\Exporter\Service\ExporterConfigurationInterface"/>
             <argument type="service" id="boxalino.exporter.util.library"/>
             <argument type="service" id="boxalino.exporter.util.file-handler"/>
             <argument type="service" id="boxalino.exporter.scheduler"/>
+            <argument type="string">%kernel.project_dir%/boxalino/</argument>
         </service>
 
         <service id="Boxalino\Exporter\Service\ExporterManager" abstract="true">
             <argument type="service" id="monolog.logger.boxalino-exporter"/>
-            <argument type="service" id="boxalino.exporter.util.configurator"/>
+            <argument type="service" id="Boxalino\Exporter\Service\ExporterConfigurationInterface"/>
             <argument type="service" id="boxalino.exporter.scheduler"/>
-            <argument type="service" id="boxalino.exporter.service"/>
-            <argument type="string">%kernel.project_dir%/boxalino/</argument>
+            <argument type="service" id="Boxalino\Exporter\Service\ExporterServiceInterface"/>
         </service>
 
-        <service id="boxalino.exporter.full" class="Boxalino\Exporter\Service\ExporterFull" parent="Boxalino\Exporter\Service\ExporterManager"/>
-        <service id="boxalino.exporter.delta" class="Boxalino\Exporter\Service\ExporterDelta" parent="Boxalino\Exporter\Service\ExporterManager"/>
+        <service id="Boxalino\Exporter\Service\ExporterFullInterface" class="Boxalino\Exporter\Service\ExporterFull" parent="Boxalino\Exporter\Service\ExporterManager"/>
+        <service id="Boxalino\Exporter\Service\ExporterDeltaInterface" class="Boxalino\Exporter\Service\ExporterDelta" parent="Boxalino\Exporter\Service\ExporterManager"/>
 
         <service id="boxalino.exporter.component" class="Boxalino\Exporter\Service\Component\ExporterComponentAbstract" abstract="true">
             <argument type="service" id="boxalino.exporter.component.resource"/>
             <argument type="service" id="Doctrine\DBAL\Connection"/>
             <argument type="service" id="monolog.logger.boxalino-exporter"/>
-            <argument type="service" id="boxalino.exporter.util.configurator"/>
+            <argument type="service" id="Boxalino\Exporter\Service\ExporterConfigurationInterface"/>
         </service>
 
         <service id="boxalino.exporter.component.product.property.translation" class="Boxalino\Exporter\Service\Item\PropertyTranslation" parent="boxalino.exporter.component.item" abstract="true"/>
@@ -81,7 +81,7 @@
         <service id="boxalino.exporter.component.item" class="Boxalino\Exporter\Service\Item\ItemsAbstract" >
             <argument type="service" id="Doctrine\DBAL\Connection"/>
             <argument type="service" id="monolog.logger.boxalino-exporter"/>
-            <argument type="service" id="boxalino.exporter.util.configurator"/>
+            <argument type="service" id="Boxalino\Exporter\Service\ExporterConfigurationInterface"/>
         </service>
 
         <service id="boxalino.exporter.component.product.price" class="Boxalino\Exporter\Service\Item\Price" parent="boxalino.exporter.component.item">
@@ -98,8 +98,8 @@
         </service>
 
         <service id="Boxalino\Exporter\Service\ExporterCommand">
-            <argument type="service" id="boxalino.exporter.delta"/>
-            <argument type="service" id="boxalino.exporter.full"/>
+            <argument type="service" id="Boxalino\Exporter\Service\ExporterDeltaInterface"/>
+            <argument type="service" id="Boxalino\Exporter\Service\ExporterFullInterface"/>
             <tag name="console.command"/>
         </service>
     </services>

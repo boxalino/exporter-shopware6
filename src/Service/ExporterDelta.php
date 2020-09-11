@@ -7,9 +7,8 @@ namespace Boxalino\Exporter\Service;
  * @package Boxalino\Exporter\Service
  */
 class ExporterDelta extends ExporterManager
+    implements ExporterDeltaInterface
 {
-
-    const EXPORTER_ID = 'boxalino.exporter.delta';
 
     /**
      * Default server timeout
@@ -22,14 +21,6 @@ class ExporterDelta extends ExporterManager
     public function getType(): string
     {
         return ExporterScheduler::BOXALINO_EXPORTER_TYPE_DELTA;
-    }
-
-    /**
-     * @return string
-     */
-    public function getExporterId(): string
-    {
-        return self::EXPORTER_ID;
     }
 
     /**
@@ -51,11 +42,10 @@ class ExporterDelta extends ExporterManager
      */
     public function exportDeniedOnAccount(string $account) : bool
     {
-        return false;
         $latestDeltaRunDate = $this->getLastSuccessfulExport($account);
         $latestFullRunDate = $this->scheduler->getLastSuccessfulExportByTypeAccount(ExporterScheduler::BOXALINO_EXPORTER_TYPE_FULL, $account);
-        $deltaFrequency = $this->config->getDeltaFrequencyMinInterval($account);
-        $deltaFullRange = $this->config->getDeltaScheduleTime($account);
+        $deltaFrequency = $this->config->getDeltaFrequencyMinInterval();
+        $deltaFullRange = $this->config->getDeltaScheduleTime();
 
         if($latestFullRunDate != min($latestFullRunDate, date('Y-m-d H:i:s', strtotime("-$deltaFullRange min"))))
         {
@@ -83,9 +73,9 @@ class ExporterDelta extends ExporterManager
     /**
      * @return bool
      */
-    public function getExportFull() : bool
+    public function isDelta() : bool
     {
-        return false;
+        return true;
     }
 
 }

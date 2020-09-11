@@ -7,6 +7,7 @@ use Shopware\Core\Defaults;
 use Shopware\Core\Framework\Uuid\Uuid;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
 use Psr\Log\LoggerInterface;
+use Boxalino\Exporter\Service\ExporterConfigurationInterface;
 
 /**
  * Class Configuration
@@ -17,6 +18,7 @@ use Psr\Log\LoggerInterface;
  * @package Boxalino\Exporter\Service\Util
  */
 class Configuration extends \Boxalino\RealTimeUserExperience\Service\Util\Configuration
+    implements ExporterConfigurationInterface
 {
     CONST BOXALINO_CONFIG_KEY = "BoxalinoExporter";
 
@@ -43,6 +45,8 @@ class Configuration extends \Boxalino\RealTimeUserExperience\Service\Util\Config
         "exportTimeout",
         "temporaryExportPath"
     ];
+
+    protected $account = null;
 
     /**
      * @var array
@@ -162,12 +166,11 @@ class Configuration extends \Boxalino\RealTimeUserExperience\Service\Util\Config
     }
 
     /**
-     * @param string $account
      * @throws \Exception
      */
-    public function getChannelDefaultLanguageId(string $account) : string
+    public function getChannelDefaultLanguageId() : string
     {
-        $config = $this->getAccountConfig($account);
+        $config = $this->getAccountConfig();
         return $config['sales_channel_default_language_id'];
     }
 
@@ -180,97 +183,88 @@ class Configuration extends \Boxalino\RealTimeUserExperience\Service\Util\Config
     }
 
     /**
-     * @param $account
      * @return mixed
      * @throws \Exception
      */
-    public function getAccountConfig(string $account) : array
+    public function getAccountConfig() : array
     {
-        if(isset($this->indexConfig[$account]))
+        if(isset($this->indexConfig[$this->account]))
         {
-            return $this->indexConfig[$account];
+            return $this->indexConfig[$this->account];
         }
-
-        throw new \Exception("Account is not defined: " . $account);
+        throw new \Exception("Account is not defined: " . $this->account);
     }
 
     /**
-     * @param $account
      * @return mixed
      * @throws \Exception
      */
-    public function getCustomerGroupId(string $account)  : string
+    public function getCustomerGroupId()  : string
     {
-        $config = $this->getAccountConfig($account);
+        $config = $this->getAccountConfig();
         return $config['sales_channel_customer_group_id'];
     }
 
     /**
-     * @param $account
      * @return mixed
      * @throws \Exception
      */
-    public function getChannelRootCategoryId(string $account) : string
+    public function getChannelRootCategoryId() : string
     {
-        $config = $this->getAccountConfig($account);
+        $config = $this->getAccountConfig();
         return $config['sales_channel_navigation_category_id'];
     }
 
     /**
-     * @param $account
      * @return bool
      * @throws \Exception
      */
-    public function isCustomersExportEnabled(string $account) : bool
+    public function isCustomersExportEnabled() : bool
     {
-        $config = $this->getAccountConfig($account);
+        $config = $this->getAccountConfig();
         return (bool)$config['exportCustomerEnable'];
     }
 
     /**
-     * @param $account
      * @return bool
      * @throws \Exception
      */
-    public function isTransactionsExportEnabled(string $account) : bool
+    public function isTransactionsExportEnabled() : bool
     {
-        $config = $this->getAccountConfig($account);
+        $config = $this->getAccountConfig();
         return (bool) $config['exportTransactionEnable'];
     }
 
     /**
-     * @param $account
      * @return bool
      * @throws \Exception
      */
-    public function isVoucherExportEnabled(string $account) : bool
+    public function isVoucherExportEnabled() : bool
     {
-        $config = $this->getAccountConfig($account);
+        $config = $this->getAccountConfig();
         return (bool) $config['exportVoucherEnable'];
     }
 
     /**
-     * @param $account
      * @return string
      * @throws \Exception
      */
-    public function getExportTransactionIncremental(string $account) : string
+    public function isTransactionExportIncremental() : string
     {
-        $config = $this->getAccountConfig($account);
+        $config = $this->getAccountConfig();
         return (bool) $config['exportTransactionMode'];
     }
 
     /**
      * Getting additional tables for each entity to be exported (products, customers, transactions)
      *
-     * @param string $account
      * @param string $type
      * @return array
      * @throws \Exception
      */
-    public function getAccountExtraTablesByComponent(string $account, string $type) : array
+    public function getExtraTablesByComponent(string $type) : array
     {
-        $config = $this->getAccountConfig($account);
+        $config = $this->getAccountConfig();
         $additionalTablesList = $config["{$type}ExtraTable"];
         if($additionalTablesList)
         {
@@ -281,13 +275,12 @@ class Configuration extends \Boxalino\RealTimeUserExperience\Service\Util\Config
     }
 
     /**
-     * @param $account
      * @return mixed
      * @throws \Exception
      */
-    public function getAccountPassword(string $account) : string
+    public function getPassword() : string
     {
-        $config = $this->getAccountConfig($account);
+        $config = $this->getAccountConfig();
         $password = $config['password'];
         if(empty($password) || is_null($password)) {
             throw new \Exception("Please provide a password for your boxalino account in the configuration");
@@ -297,13 +290,12 @@ class Configuration extends \Boxalino\RealTimeUserExperience\Service\Util\Config
     }
 
     /**
-     * @param $account
      * @return mixed
      * @throws \Exception
      */
-    public function useDevIndex(string $account) : bool
+    public function useDevIndex() : bool
     {
-        $config = $this->getAccountConfig($account);
+        $config = $this->getAccountConfig();
         try{
             return (bool)$config['devIndex'];
         } catch (\Exception $exception)
@@ -313,80 +305,73 @@ class Configuration extends \Boxalino\RealTimeUserExperience\Service\Util\Config
     }
 
     /**
-     * @param $account
      * @return mixed
      * @throws \Exception
      */
-    public function getAccountChannelId(string $account) : string
+    public function getChannelId() : string
     {
-        $config = $this->getAccountConfig($account);
+        $config = $this->getAccountConfig();
         return $config['sales_channel_id'];
     }
 
     /**
-     * @param $account
      * @return []
      * @throws \Exception
      */
-    public function getAccountLanguages(string $account) : array
+    public function getLanguages() : array
     {
-        $config = $this->getAccountConfig($account);
+        $config = $this->getAccountConfig();
         $languages = explode(",", $config['sales_channel_languages_locale']);
         $languageIds = explode(",", $config['sales_channel_languages_id']);
         return array_combine($languageIds, $languages);
     }
 
     /**
-     * @param string $account
      * @return null | string
      */
-    public function getExportTemporaryArchivePath(string $account) : ?string
+    public function getExportTemporaryArchivePath() : ?string
     {
-        $config = $this->getAccountConfig($account);
+        $config = $this->getAccountConfig();
         return empty($config["temporaryExportPath"]) ? null : $config["temporaryExportPath"];
     }
 
     /**
-     * @param $account
      * @return bool
      * @throws \Exception
      */
-    public function exportProductImages(string $account) : bool
+    public function exportProductImages() : bool
     {
-        $config = $this->getAccountConfig($account);
+        $config = $this->getAccountConfig();
         return (bool) $config['exportProductImages'];
     }
 
     /**
-     * @param $account
      * @return bool
      * @throws \Exception
      */
-    public function exportProductUrl(string $account) : bool
+    public function exportProductUrl() : bool
     {
-        $config = $this->getAccountConfig($account);
+        $config = $this->getAccountConfig();
         return (bool)$config['exportProductUrl'];
     }
 
     /**
-     * @param $account
      * @return bool
      * @throws \Exception
      */
-    public function publishConfigurationChanges(string $account) : bool
+    public function publishConfigurationChanges() : bool
     {
-        $config = $this->getAccountConfig($account);
+        $config = $this->getAccountConfig();
         return (bool) $config['exportPublishConfig'];
     }
 
     /**
-     * @param string $account
      * @return int
      * @throws \Exception
      */
-    public function getExporterTimeout(string $account) : int
+    public function getExporterTimeout() : int
     {
-        $config = $this->getAccountConfig($account);
+        $config = $this->getAccountConfig();
         if(isset($config['exportTimeout']) && !empty($config['exportTimeout']))
         {
             return $config['exportTimeout'];
@@ -402,13 +387,12 @@ class Configuration extends \Boxalino\RealTimeUserExperience\Service\Util\Config
      * A full data synchronization can take up to 2h (depending on the size of the export and the complexity of data)
      * For this reason, the daily full data synchronization must happen when there is the least traffic on the store
      *
-     * @param string $account
      * @return int
      * @throws \Exception
      */
-    public function getDeltaScheduleTime(string $account) : int
+    public function getDeltaScheduleTime() : int
     {
-        $config = $this->getAccountConfig($account);
+        $config = $this->getAccountConfig();
         if(isset($config['exportCronSchedule']) && !empty($config['exportCronSchedule']))
         {
             return $config['exportCronSchedule'];
@@ -420,19 +404,28 @@ class Configuration extends \Boxalino\RealTimeUserExperience\Service\Util\Config
     /**
      * Minimum time interval between 2 deltas to allow a run (minutes)
      *
-     * @param string $account
      * @return int
      * @throws \Exception
      */
-    public function getDeltaFrequencyMinInterval(string $account) : int
+    public function getDeltaFrequencyMinInterval() : int
     {
-        $config = $this->getAccountConfig($account);
+        $config = $this->getAccountConfig();
         if(isset($config['exportDeltaFrequency']) && !empty($config['exportDeltaFrequency']))
         {
             return $config['exportDeltaFrequency'];
         }
 
         return 15;
+    }
+
+    /**
+     * @param string $account
+     * @return $this|mixed
+     */
+    public function setAccount(string $account)
+    {
+        $this->account = $account;
+        return $this;
     }
 
 }

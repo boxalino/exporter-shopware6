@@ -1,7 +1,7 @@
 <?php
 namespace Boxalino\Exporter\Service\Item;
 
-use Boxalino\Exporter\Service\Component\Product;
+use Boxalino\Exporter\Service\Component\ProductComponentInterface;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use Shopware\Core\Defaults;
@@ -46,8 +46,8 @@ class Review extends ItemsAbstract
             ->addGroupBy('IFNULL(product.parent_id, product.id)')
             ->setParameter("channel", Uuid::fromHexToBytes($this->getChannelId()), ParameterType::BINARY)
             ->setParameter('live', Uuid::fromHexToBytes(Defaults::LIVE_VERSION), ParameterType::BINARY)
-            ->setFirstResult(($page - 1) * Product::EXPORTER_STEP)
-            ->setMaxResults(Product::EXPORTER_STEP);
+            ->setFirstResult(($page - 1) * ProductComponentInterface::EXPORTER_STEP)
+            ->setMaxResults(ProductComponentInterface::EXPORTER_STEP);
         
         $productIds = $this->getExportedProductIds();
         if(!empty($productIds))

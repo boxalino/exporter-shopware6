@@ -1,7 +1,7 @@
 <?php
 namespace Boxalino\Exporter\Service\Item;
 
-use Boxalino\Exporter\Service\Component\Product;
+use Boxalino\Exporter\Service\Component\ProductComponentInterface;
 use Doctrine\DBAL\FetchMode;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Query\QueryBuilder;
@@ -38,8 +38,8 @@ abstract class PropertyTranslation extends ItemsAbstract
                 'translation', 'translation.property_group_option_id = property_group_option.id')
             ->andWhere($this->getLanguageHeaderConditional())
             ->addGroupBy('property_group_option.id')
-            ->setFirstResult(($page - 1) * Product::EXPORTER_STEP)
-            ->setMaxResults(Product::EXPORTER_STEP);
+            ->setFirstResult(($page - 1) * ProductComponentInterface::EXPORTER_STEP)
+            ->setMaxResults(ProductComponentInterface::EXPORTER_STEP);
 
         if(!is_null($this->propertyId))
         {

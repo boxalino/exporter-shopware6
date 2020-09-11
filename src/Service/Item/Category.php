@@ -27,6 +27,7 @@ class Category extends ItemsAbstract
     public function export()
     {
         $this->logger->info("BoxalinoExporter: Preparing products - START CATEGORIES EXPORT.");
+        $this->config->setAccount($this->getAccount());
         $rootCategoryId = $this->getRootCategoryId();
         $query = $this->connection->createQueryBuilder();
         $query->select($this->getRequiredFields())

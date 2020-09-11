@@ -15,18 +15,10 @@ use Shopware\Core\Framework\Uuid\Uuid;
 class Customer extends ExporterComponentAbstract
     implements CustomerComponentInterface
 {
-
-    CONST EXPORTER_LIMIT = 10000000;
-    CONST EXPORTER_STEP = 10000;
-    CONST EXPORTER_DATA_SAVE_STEP = 1000;
-
-    CONST EXPORTER_COMPONENT_ID_FIELD = "id";
-    CONST EXPORTER_COMPONENT_MAIN_FILE = "customers.csv";
-    CONST EXPORTER_COMPONENT_TYPE = "customers";
-
+    
     public function export()
     {
-        if (!$this->config->isCustomersExportEnabled($this->getAccount()))
+        if (!$this->config->isCustomersExportEnabled())
         {
             $this->logger->info("BoxalinoExporter: Customers export is disabled.");
             return true;
@@ -41,11 +33,11 @@ class Customer extends ExporterComponentAbstract
     public function exportComponent()
     {
         $properties = $this->getRequiredProperties();
-        $defaultLanguageId = $this->config->getChannelDefaultLanguageId($this->getAccount());
+        $defaultLanguageId = $this->config->getChannelDefaultLanguageId();
         $latestOrderSQL = $this->getLastAddressSql();
 
         $header = true;  $totalCount = 0;  $page = 1;
-        while (self::EXPORTER_LIMIT > $totalCount + self::EXPORTER_STEP)
+        while (CustomerComponentInterface::EXPORTER_LIMIT > $totalCount + CustomerComponentInterface::EXPORTER_STEP)
         {
             $data = [];
             $this->logger->info("BoxalinoExporter: Customers export - OFFSET " . $totalCount);
@@ -115,10 +107,10 @@ class Customer extends ExporterComponentAbstract
                 ->andWhere("customer.sales_channel_id=:channelId")
                 ->groupBy('customer.id')
                 ->setParameter("live",  Uuid::fromHexToBytes(Defaults::LIVE_VERSION), ParameterType::BINARY)
-                ->setParameter('channelId', Uuid::fromHexToBytes($this->config->getAccountChannelId($this->getAccount())), ParameterType::BINARY)
+                ->setParameter('channelId', Uuid::fromHexToBytes($this->config->getChannelId()), ParameterType::BINARY)
                 ->setParameter("defaultLanguageId", Uuid::fromHexToBytes($defaultLanguageId), ParameterType::BINARY)
-                ->setFirstResult(($page - 1) * self::EXPORTER_STEP)
-                ->setMaxResults(self::EXPORTER_STEP);
+                ->setFirstResult(($page - 1) * CustomerComponentInterface::EXPORTER_STEP)
+                ->setMaxResults(CustomerComponentInterface::EXPORTER_STEP);
 
             $count = $query->execute()->rowCount();
             $totalCount+=$count;
@@ -134,7 +126,7 @@ class Customer extends ExporterComponentAbstract
                     $exportFields = array_keys($row); $this->setHeaderFields($exportFields); $data[] = $exportFields; $header = false;
                 }
                 $data[] = $row;
-                if(count($data) > self::EXPORTER_DATA_SAVE_STEP)
+                if(count($data) > CustomerComponentInterface::EXPORTER_DATA_SAVE_STEP)
                 {
                     $this->getFiles()->savePartToCsv($this->getComponentMainFile(), $data);
                     $data = [];
@@ -144,7 +136,7 @@ class Customer extends ExporterComponentAbstract
             $this->getFiles()->savePartToCsv($this->getComponentMainFile(), $data);
             $this->logger->info("BoxalinoExporter: Customers export - Current page: {$page}, data count: {$totalCount}");
             $data=[]; $page++;
-            if($count < self::EXPORTER_STEP - 1)
+            if($count < CustomerComponentInterface::EXPORTER_STEP - 1)
             {
                 $this->setSuccessOnComponentExport(true);
                 break;

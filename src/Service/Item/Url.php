@@ -1,7 +1,7 @@
 <?php
 namespace Boxalino\Exporter\Service\Item;
 
-use Boxalino\Exporter\Service\Component\Product;
+use Boxalino\Exporter\Service\Component\ProductComponentInterface;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Shopware\Core\Defaults;
@@ -21,8 +21,9 @@ class Url extends ItemsAbstract
     public function export()
     {
         $this->logger->info("BoxalinoExporter: Preparing products - START SEO URL EXPORT.");
+        $this->config->setAccount($this->getAccount());
         $totalCount = 0; $page = 1; $header = true;
-        while (Product::EXPORTER_LIMIT > $totalCount + Product::EXPORTER_STEP)
+        while (ProductComponentInterface::EXPORTER_LIMIT > $totalCount + ProductComponentInterface::EXPORTER_STEP)
         {
             $query = $this->getItemRelationQuery($page);
             $count = $query->execute()->rowCount();
@@ -40,13 +41,13 @@ class Url extends ItemsAbstract
                 $data = array_merge(array(array_keys(end($data))), $data);
             }
 
-            foreach (array_chunk($data, Product::EXPORTER_DATA_SAVE_STEP) as $dataSegment) {
+            foreach (array_chunk($data, ProductComponentInterface::EXPORTER_DATA_SAVE_STEP) as $dataSegment) {
                 $this->getFiles()->savePartToCsv($this->getItemMainFile(), $dataSegment);
                 $dataSegment = [];
             }
 
             $data = []; $page++;
-            if ($count < Product::EXPORTER_STEP - 1) { break; }
+            if ($count < ProductComponentInterface::EXPORTER_STEP - 1) { break; }
         }
 
         $this->setFilesDefinitions();
@@ -70,8 +71,8 @@ class Url extends ItemsAbstract
             ->addGroupBy('product.id')
             ->setParameter("channel", Uuid::fromHexToBytes($this->getChannelId()))
             ->setParameter('live', Uuid::fromHexToBytes(Defaults::LIVE_VERSION))
-            ->setFirstResult(($page - 1) * Product::EXPORTER_STEP)
-            ->setMaxResults(Product::EXPORTER_STEP);
+            ->setFirstResult(($page - 1) * ProductComponentInterface::EXPORTER_STEP)
+            ->setMaxResults(ProductComponentInterface::EXPORTER_STEP);
 
         $productIds = $this->getExportedProductIds();
         if(!empty($productIds))

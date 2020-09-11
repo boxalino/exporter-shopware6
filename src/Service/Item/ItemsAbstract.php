@@ -2,9 +2,8 @@
 namespace Boxalino\Exporter\Service\Item;
 
 use Boxalino\Exporter\Service\Component\ExporterComponentAbstract;
-use Boxalino\Exporter\Service\Component\Product;
-use Boxalino\Exporter\Service\ExporterInterface;
-use Boxalino\Exporter\Service\Util\Configuration;
+use Boxalino\Exporter\Service\Component\ProductComponentInterface;
+use Boxalino\Exporter\Service\ExporterConfigurationInterface;
 use Boxalino\Exporter\Service\Util\ContentLibrary;
 use Boxalino\Exporter\Service\Util\FileHandler;
 use Doctrine\DBAL\Connection;
@@ -16,7 +15,7 @@ use Psr\Log\LoggerInterface;
 use Shopware\Core\Defaults;
 use Shopware\Core\Framework\Uuid\Uuid;
 
-abstract class ItemsAbstract implements ExporterInterface
+abstract class ItemsAbstract implements ItemComponentInterface
 {
 
     /**
@@ -45,7 +44,7 @@ abstract class ItemsAbstract implements ExporterInterface
     protected $logger;
 
     /**
-     * @var Configuration
+     * @var ExporterConfigurationInterface
      */
     protected $config;
 
@@ -57,7 +56,7 @@ abstract class ItemsAbstract implements ExporterInterface
     public function __construct(
         Connection $connection,
         LoggerInterface $boxalinoLogger,
-        Configuration $exporterConfigurator
+        ExporterConfigurationInterface $exporterConfigurator
     ){
         $this->connection = $connection;
         $this->logger = $boxalinoLogger;
@@ -73,8 +72,9 @@ abstract class ItemsAbstract implements ExporterInterface
     public function exportItemRelation()
     {
         $this->logger->info("BoxalinoExporter: Preparing products - START ITEM RELATIONS EXPORT.");
+        $this->config->setAccount($this->getAccount());
         $totalCount = 0; $page = 1; $header = true;
-        while (Product::EXPORTER_LIMIT > $totalCount + Product::EXPORTER_STEP)
+        while (ProductComponentInterface::EXPORTER_LIMIT > $totalCount + ProductComponentInterface::EXPORTER_STEP)
         {
             $query = $this->getItemRelationQuery($page);
             $count = $query->execute()->rowCount();
@@ -92,13 +92,13 @@ abstract class ItemsAbstract implements ExporterInterface
                 $header = false;
                 $data = array_merge(array(array_keys(end($data))), $data);
             }
-            foreach(array_chunk($data, Product::EXPORTER_DATA_SAVE_STEP) as $dataSegment)
+            foreach(array_chunk($data, ProductComponentInterface::EXPORTER_DATA_SAVE_STEP) as $dataSegment)
             {
                 $this->getFiles()->savePartToCsv($this->getItemRelationFile(), $dataSegment);
             }
 
             $data = []; $page++;
-            if($count < Product::EXPORTER_STEP - 1) { break;}
+            if($count < ProductComponentInterface::EXPORTER_STEP - 1) { break;}
         }
 
         $this->setFilesDefinitions();
@@ -120,7 +120,7 @@ abstract class ItemsAbstract implements ExporterInterface
      */
     public function getRootCategoryId() : string
     {
-        return $this->config->getChannelRootCategoryId($this->getAccount());
+        return $this->config->getChannelRootCategoryId();
     }
 
     /**
@@ -129,7 +129,7 @@ abstract class ItemsAbstract implements ExporterInterface
      */
     public function getLanguageHeaders() : array
     {
-        $languages = $this->config->getAccountLanguages($this->getAccount());
+        $languages = $this->config->getLanguages();
         $fields = preg_filter('/^/', 'value_', array_values($languages));
 
         return array_combine($languages, $fields);
@@ -151,7 +151,7 @@ abstract class ItemsAbstract implements ExporterInterface
     public function getLocalizedFields(string $mainTable, string $mainTableIdField, string $idField,
                                        string $versionIdField, string $localizedFieldName, array $groupByFields
     ) : QueryBuilder {
-        $languages = $this->config->getAccountLanguages($this->getAccount());
+        $languages = $this->config->getLanguages();
         $defaultLanguage = $this->getChannelDefaultLanguage();
         $alias = []; $innerConditions = []; $leftConditions = []; $selectFields = array_merge($groupByFields, []);
         $inner='inner'; $left='left';
@@ -240,7 +240,7 @@ abstract class ItemsAbstract implements ExporterInterface
      */
     public function getChannelId() : string
     {
-        return $this->config->getAccountChannelId($this->getAccount());
+        return $this->config->getChannelId();
     }
 
     /**
@@ -258,7 +258,7 @@ abstract class ItemsAbstract implements ExporterInterface
      */
     public function getChannelDefaultLanguage() : string
     {
-        return $this->config->getChannelDefaultLanguageId($this->getAccount());
+        return $this->config->getChannelDefaultLanguageId();
     }
 
     /**
@@ -358,4 +358,5 @@ abstract class ItemsAbstract implements ExporterInterface
     {
         return $this->getPropertyName().'_id';
     }
+
 }

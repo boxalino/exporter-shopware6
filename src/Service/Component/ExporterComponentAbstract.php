@@ -1,7 +1,7 @@
 <?php
 namespace Boxalino\Exporter\Service\Component;
 
-use Boxalino\Exporter\Service\Util\Configuration;
+use Boxalino\Exporter\Service\ExporterConfigurationInterface;
 use Boxalino\Exporter\Service\Util\ContentLibrary;
 use Boxalino\Exporter\Service\Util\FileHandler;
 use Doctrine\DBAL\Connection;
@@ -15,17 +15,13 @@ use \Psr\Log\LoggerInterface;
  */
 abstract class ExporterComponentAbstract
 {
-    CONST EXPORTER_COMPONENT_ID_FIELD = "";
-    CONST EXPORTER_COMPONENT_MAIN_FILE = "";
-    CONST EXPORTER_COMPONENT_TYPE = "";
-
-    /**
+     /**
      * @var bool
      */
     protected $successOnComponentExport = false;
 
     /**
-     * @var Configuration
+     * @var ExporterConfigurationInterface
      */
     protected $config;
 
@@ -80,13 +76,13 @@ abstract class ExporterComponentAbstract
      * @param ComponentResource $resource
      * @param Connection $connection
      * @param LoggerInterface $boxalinoLogger
-     * @param Configuration $exporterConfigurator
+     * @param ExporterConfigurationInterface $exporterConfigurator
      */
     public function __construct(
         ComponentResource $resource,
         Connection $connection,
         LoggerInterface $boxalinoLogger,
-        Configuration $exporterConfigurator
+        ExporterConfigurationInterface $exporterConfigurator
     ){
         $this->resource = $resource;
         $this->connection = $connection;
@@ -129,7 +125,7 @@ abstract class ExporterComponentAbstract
     {
         $component = $this->getComponent();
         $files = $this->getFiles();
-        $tables = $this->config->getAccountExtraTablesByComponent($this->getAccount(), $component);
+        $tables = $this->config->getExtraTablesByComponent($component);
         if(empty($tables))
         {
             $this->logger->info("BoxalinoExporter: {$component} no additional tables have been found.");

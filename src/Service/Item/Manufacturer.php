@@ -1,7 +1,7 @@
 <?php
 namespace Boxalino\Exporter\Service\Item;
 
-use Boxalino\Exporter\Service\Component\Product;
+use Boxalino\Exporter\Service\Component\ProductComponentInterface;
 use Doctrine\DBAL\ParameterType;
 use Shopware\Core\Defaults;
 use Doctrine\DBAL\Query\QueryBuilder;
@@ -18,6 +18,7 @@ class Manufacturer extends ItemsAbstract
     public function export()
     {
         $this->logger->info("BoxalinoExporter: Preparing products - START MANUFACTURER EXPORT.");
+        $this->config->setAccount($this->getAccount());
         $fields = array_merge($this->getLanguageHeaders(),
             ["LOWER(HEX(manufacturer.product_manufacturer_id)) AS {$this->getPropertyIdField()}"]
         );
@@ -61,8 +62,8 @@ class Manufacturer extends ItemsAbstract
             ->addGroupBy('p.id')
             ->setParameter('live', Uuid::fromHexToBytes(Defaults::LIVE_VERSION), ParameterType::BINARY)
             ->setParameter('channelRootCategoryId', $this->getRootCategoryId(), ParameterType::STRING)
-            ->setFirstResult(($page - 1) * Product::EXPORTER_STEP)
-            ->setMaxResults(Product::EXPORTER_STEP);
+            ->setFirstResult(($page - 1) * ProductComponentInterface::EXPORTER_STEP)
+            ->setMaxResults(ProductComponentInterface::EXPORTER_STEP);
 
         $productIds = $this->getExportedProductIds();
         if(!empty($productIds))

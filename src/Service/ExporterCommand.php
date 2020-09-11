@@ -22,8 +22,8 @@ class ExporterCommand extends Command
     protected $exporterDelta;
 
     public function __construct(
-        ExporterDelta $deltaExporter,
-        ExporterFull $fullExporter
+        ExporterDeltaInterface $deltaExporter,
+        ExporterFullInterface $fullExporter
     ){
         parent::__construct();
 

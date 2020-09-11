@@ -1,7 +1,7 @@
 <?php
 namespace Boxalino\Exporter\Service\Item;
 
-use Boxalino\Exporter\Service\Component\Product;
+use Boxalino\Exporter\Service\Component\ProductComponentInterface;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\FetchMode;
 use Doctrine\DBAL\ParameterType;
@@ -26,13 +26,14 @@ class Property extends PropertyTranslation
     public function export()
     {
         $this->logger->info("BoxalinoExporter: Preparing products - START PROPERTIES EXPORT.");
+        $this->config->setAccount($this->getAccount());
         $properties = $this->getPropertyNames();
         foreach($properties as $property)
         {
             $this->setProperty($property['name']); $this->setPropertyId($property['property_group_id']);
             $this->logger->info("BoxalinoExporter: Preparing products - START $this->property EXPORT.");
             $totalCount = 0; $page = 1; $data=[]; $header = true;
-            while (Product::EXPORTER_LIMIT > $totalCount + Product::EXPORTER_STEP)
+            while (ProductComponentInterface::EXPORTER_LIMIT > $totalCount + ProductComponentInterface::EXPORTER_STEP)
             {
                 $query = $this->getLocalizedPropertyQuery($page);
                 $count = $query->execute()->rowCount();
@@ -51,13 +52,13 @@ class Property extends PropertyTranslation
                     $data = array_merge(array(array_keys(end($data))), $data);
                 }
 
-                foreach(array_chunk($data, Product::EXPORTER_DATA_SAVE_STEP) as $dataSegment)
+                foreach(array_chunk($data, ProductComponentInterface::EXPORTER_DATA_SAVE_STEP) as $dataSegment)
                 {
                     $this->getFiles()->savePartToCsv($this->getItemMainFile(), $dataSegment);
                 }
 
                 $data = []; $page++;
-                if($count < Product::EXPORTER_STEP - 1) { break;}
+                if($count < ProductComponentInterface::EXPORTER_STEP - 1) { break;}
             }
 
             $this->exportItemRelation();
@@ -94,8 +95,8 @@ class Property extends PropertyTranslation
                 "product_property.property_group_option_id = property_group_option.id")
             ->where("property_group_option.property_group_id = :propertyId")
             ->setParameter("propertyId", Uuid::fromHexToBytes($this->propertyId), ParameterType::STRING)
-            ->setFirstResult(($page - 1) * Product::EXPORTER_STEP)
-            ->setMaxResults(Product::EXPORTER_STEP);
+            ->setFirstResult(($page - 1) * ProductComponentInterface::EXPORTER_STEP)
+            ->setMaxResults(ProductComponentInterface::EXPORTER_STEP);
 
         $productIds = $this->getExportedProductIds();
         if(!empty($productIds))
