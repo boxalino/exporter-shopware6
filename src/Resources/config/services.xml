@@ -23,6 +23,11 @@
             <argument type="service" id="monolog.logger.boxalino-exporter"/>
             <argument type="service" id="Boxalino\Exporter\Service\ExporterFullInterface"/>
         </service>
+        <service id="Boxalino\Exporter\ScheduledTask\ExporterDeltaHandlerAbstract" abstract="true">
+            <argument type="service" id="scheduled_task.repository" />
+            <argument type="service" id="monolog.logger.boxalino-exporter"/>
+            <argument type="service" id="Boxalino\Exporter\Service\ExporterDeltaInterface"/>
+        </service>
 
         <!-- exporter service -->
         <service id="boxalino.exporter.util.file-handler" class="Boxalino\Exporter\Service\Util\FileHandler" />
