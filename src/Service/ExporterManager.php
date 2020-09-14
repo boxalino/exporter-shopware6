@@ -155,9 +155,9 @@ abstract class ExporterManager
 
     /**
      * @param string $account
-     * @return ExporterManager
+     * @return ExporterInterface
      */
-    public function setAccount(string $account) : self
+    public function setAccount(string $account) : ExporterInterface
     {
         $this->account = $account;
         return $this;
@@ -165,9 +165,9 @@ abstract class ExporterManager
 
     /**
      * @param array $ids
-     * @return $this
+     * @return ExporterInterface
      */
-    public function setIds(array $ids) : self
+    public function setIds(array $ids) : ExporterInterface
     {
         $this->ids = $ids;
         return $this;

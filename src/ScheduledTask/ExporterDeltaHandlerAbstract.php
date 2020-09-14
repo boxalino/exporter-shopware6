@@ -1,7 +1,7 @@
 <?php
 namespace Boxalino\Exporter\ScheduledTask;
 
-use Boxalino\Exporter\Service\ExporterFullInterface;
+use Boxalino\Exporter\Service\ExporterDeltaInterface;
 use Psr\Log\LoggerInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Shopware\Core\Framework\MessageQueue\ScheduledTask\ScheduledTaskHandler;
@@ -10,10 +10,10 @@ use Shopware\Core\Framework\MessageQueue\ScheduledTask\ScheduledTaskHandler;
  * Class ExportFullHandler
  * @package Boxalino\Exporter\ScheduledTask
  */
-abstract class ExporterFullHandlerAbstract extends ScheduledTaskHandler
+abstract class ExporterDeltaHandlerAbstract extends ScheduledTaskHandler
 {
     /**
-     * @var ExporterFullInterface
+     * @var ExporterDeltaInterface
      */
     protected $exporter;
 
@@ -27,10 +27,15 @@ abstract class ExporterFullHandlerAbstract extends ScheduledTaskHandler
      */
     protected $account = null;
 
+    /**
+     * @var array
+     */
+    protected $ids = [];
+
     public function __construct(
         EntityRepositoryInterface $scheduledTaskRepository,
         LoggerInterface $logger,
-        ExporterFullInterface $exporter
+        ExporterDeltaInterface $exporter
     ){
         parent::__construct($scheduledTaskRepository);
         $this->exporter = $exporter;
@@ -45,7 +50,7 @@ abstract class ExporterFullHandlerAbstract extends ScheduledTaskHandler
     abstract static function getHandledMessages(): iterable;
 
     /**
-     * Triggers the full data exporter for a specific account if so it is set
+     * Triggers the delta data exporter for a specific account if so it is set
      *
      * @throws \Exception
      */
@@ -55,6 +60,12 @@ abstract class ExporterFullHandlerAbstract extends ScheduledTaskHandler
         {
             $this->exporter->setAccount($this->account);
         }
+
+        if(!empty($this->ids))
+        {
+            $this->exporter->setIds($this->ids);
+        }
+
         try{
             $this->exporter->export();
         } catch (\Exception $exc)
@@ -73,6 +84,18 @@ abstract class ExporterFullHandlerAbstract extends ScheduledTaskHandler
     public function setAccount(string $account)
     {
         $this->account = $account;
+        return $this;
+    }
+
+    /**
+     * Sets product IDs
+     *
+     * @param array $ids
+     * @return $this
+     */
+    public function setIds(array $ids)
+    {
+        $this->ids = $ids;
         return $this;
     }
 

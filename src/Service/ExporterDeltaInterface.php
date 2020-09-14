@@ -14,4 +14,11 @@ interface ExporterDeltaInterface extends ExporterInterface
      * @return array
      */
     public function getIds(): array;
+
+    /**
+     * @param array $ids
+     * @return ExporterInterface
+     */
+    public function setIds(array $ids) : ExporterInterface;
+
 }
