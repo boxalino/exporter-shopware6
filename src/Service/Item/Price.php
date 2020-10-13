@@ -26,7 +26,7 @@ class Price extends ItemsAbstract
     CONST EXPORTER_COMPONENT_ITEM_RELATION_FILE = 'product_price.csv';
 
     /**
-     * @var SalesChannelContextService
+     * @var SalesChannelContextServiceInterface
      */
     protected $salesChannelContextService;
 

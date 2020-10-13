@@ -25,7 +25,7 @@ class PriceAdvanced extends ItemsAbstract
     CONST EXPORTER_COMPONENT_ITEM_NAME = "advanced_price";
 
     /**
-     * @var SalesChannelContextService
+     * @var SalesChannelContextServiceInterface
      */
     protected $salesChannelContextService;
 
