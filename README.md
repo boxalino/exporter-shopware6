@@ -26,8 +26,8 @@ https://github.com/boxalino/rtux-integration-shopware
 Shopware Admin >> Settings >> System >> Plugins >> Boxalino Exporter
 
 5. In order to kick off your account, a full export is required. 
-For this, please set the exporter configuration per Sales Channel and disable the plugin where it is not in use.
-The Headless channel must have the plugin disabled.
+For this, please set configuration per Sales Channel and disable the plugin where it is not in use. The Headless channel must have the plugin disabled.
+In order to trigger the exporter, follow [the exporter integration steps](https://github.com/boxalino/exporter-shopware6/wiki/Full-data-sync).
 ``./bin/console boxalino:exporter:run full``
 
 6*. If the plugin configurations are not displayed, they can be accessed via direct link:
@@ -36,7 +36,7 @@ The Headless channel must have the plugin disabled.
 The exporter will create a _boxalino_ directory in your project where the temporary CSV files will be stored before the export;
 The exporter will log it's process in a dedicated log _./var/log/boxalino-exporter-**env**.log_ 
 
-6. Proceed with the integration features available in our guidelines suggestions https://github.com/boxalino/rtux-integration-shopware OR in [the package wiki](https://github.com/boxalino/exporter-shopware6/wiki)
+6. Check more integration features in our guidelines suggestions https://github.com/boxalino/rtux-integration-shopware OR in [the package wiki](https://github.com/boxalino/exporter-shopware6/wiki)
 
 ## Contact us!
 
