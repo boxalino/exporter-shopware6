@@ -102,11 +102,6 @@
             <argument type="service" id="media.repository"/>
         </service>
 
-        <service id="Boxalino\Exporter\Service\ExporterCommand">
-            <argument type="service" id="Boxalino\Exporter\Service\ExporterDeltaInterface"/>
-            <argument type="service" id="Boxalino\Exporter\Service\ExporterFullInterface"/>
-            <tag name="console.command"/>
-        </service>
     </services>
 
 </container>
