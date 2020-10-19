@@ -145,29 +145,28 @@ abstract class ItemsAbstract implements ItemComponentInterface
      * @param string $versionIdField
      * @param string $localizedFieldName
      * @param array $groupByFields
+     * @param array $whereConditions
      * @return \Doctrine\DBAL\Query\QueryBuilder
      * @throws \Exception
      */
     public function getLocalizedFields(string $mainTable, string $mainTableIdField, string $idField,
-                                       string $versionIdField, string $localizedFieldName, array $groupByFields
+                                       string $versionIdField, string $localizedFieldName, array $groupByFields, array $whereConditions = []
     ) : QueryBuilder {
         $languages = $this->config->getLanguages();
         $defaultLanguage = $this->getChannelDefaultLanguage();
         $alias = []; $innerConditions = []; $leftConditions = []; $selectFields = array_merge($groupByFields, []);
         $inner='inner'; $left='left';
+        $default = $mainTable . "_default";
+        $defaultConditions = [
+            "$mainTable.$mainTableIdField = $default.$idField",
+            "$mainTable.$versionIdField = $default.$versionIdField",
+            "LOWER(HEX($default.language_id)) = '$defaultLanguage'"
+        ];
         foreach($languages as $languageId=>$languageCode)
         {
             $t1 = $mainTable . "_" . $languageCode . "_" . $left;
-            $t2 = $mainTable . "_" . $languageCode . "_" . $inner;
-            $alias[$languageCode][$left] = $t1;
-            $alias[$languageCode][$inner] = $t2;
-            $selectFields[] = "IF(MIN($t1.$localizedFieldName) IS NULL, MIN($t2.$localizedFieldName), MIN($t1.$localizedFieldName)) as value_$languageCode";
-            $innerConditions[$languageCode] = [
-                "$mainTable.$mainTableIdField = $t2.$idField",
-                "$mainTable.$versionIdField = $t2.$versionIdField",
-                "LOWER(HEX($t2.language_id)) = '$defaultLanguage'"
-            ];
-
+            $alias[$languageCode] = $t1;
+            $selectFields[] = "IF(MIN($t1.$localizedFieldName) IS NULL, MIN($default.$localizedFieldName), MIN($t1.$localizedFieldName)) as value_$languageCode";
             $leftConditions[$languageCode] = [
                 "$mainTable.$mainTableIdField = $t1.$idField",
                 "$mainTable.$versionIdField = $t1.$versionIdField",
@@ -177,12 +176,17 @@ abstract class ItemsAbstract implements ItemComponentInterface
 
         $query = $this->connection->createQueryBuilder();
         $query->select($selectFields)
-            ->from($mainTable);
+            ->from($mainTable)
+            ->leftJoin($mainTable, $mainTable, $default, implode(" AND ", $defaultConditions));
 
         foreach($languages as $languageCode)
         {
-            $query->innerJoin($mainTable, $mainTable, $alias[$languageCode][$inner], implode(" AND ", $innerConditions[$languageCode]))
-                ->leftJoin($mainTable, $mainTable, $alias[$languageCode][$left], implode(" AND ", $leftConditions[$languageCode]));
+            $query->leftJoin($mainTable, $mainTable, $alias[$languageCode], implode(" AND ", $leftConditions[$languageCode]));
+        }
+
+        foreach($whereConditions as $condition)
+        {
+            $query->andWhere($condition);
         }
 
         $query->groupBy($groupByFields);

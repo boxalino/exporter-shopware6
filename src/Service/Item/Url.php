@@ -67,9 +67,7 @@ class Url extends ItemsAbstract
             ->leftJoin('product', '( ' . $this->getLocalizedFieldsQuery()->__toString() . ') ',
                 'seo_url', 'seo_url.foreign_key = product.id')
             ->andWhere('product.version_id = :live')
-            ->andWhere('seo_url.sales_channel_id = :channel')
             ->addGroupBy('product.id')
-            ->setParameter("channel", Uuid::fromHexToBytes($this->getChannelId()))
             ->setParameter('live', Uuid::fromHexToBytes(Defaults::LIVE_VERSION))
             ->setFirstResult(($page - 1) * ProductComponentInterface::EXPORTER_STEP)
             ->setMaxResults(ProductComponentInterface::EXPORTER_STEP);
@@ -99,7 +97,8 @@ class Url extends ItemsAbstract
     {
         return $this->getLocalizedFields('seo_url', 'id', 'id',
             'foreign_key','seo_path_info',
-            ['seo_url.foreign_key', 'seo_url.sales_channel_id']
+            ['seo_url.foreign_key', 'seo_url.sales_channel_id'],
+            ["seo_url.route_name='frontend.detail.page'", "seo_url.is_canonical='1'", "LOWER(HEX(seo_url.sales_channel_id))='{$this->getChannelId()}'"]
         );
     }
 
