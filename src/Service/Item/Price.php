@@ -101,7 +101,7 @@ class Price extends ItemsAbstract
             $query->andWhere('product.id IN (:ids)')
                 ->setParameter('ids', Uuid::fromHexToBytesList($productIds), Connection::PARAM_STR_ARRAY);
         }
-        
+
         return $query;
     }
 
@@ -122,25 +122,25 @@ class Price extends ItemsAbstract
         );
 
         $priceFields = [
-            'IF(product.price IS NULL, FORMAT(JSON_EXTRACT(JSON_EXTRACT(parent.price, \'$.*.gross\'),\'$[0]\'), 2), FORMAT(JSON_EXTRACT(JSON_EXTRACT(product.price, \'$.*.gross\'),\'$[0]\'), 2)) AS price_gross',
-            'IF(product.price IS NULL, FORMAT(JSON_EXTRACT(JSON_EXTRACT(parent.price, \'$.*.net\'),\'$[0]\'), 2), FORMAT(JSON_EXTRACT(JSON_EXTRACT(product.price, \'$.*.net\'),\'$[0]\'), 2)) AS price_net',
-            'IF(product.price IS NULL, FORMAT(JSON_EXTRACT(JSON_EXTRACT(parent.price, \'$.*.listPrice\'),\'$[0].net\'), 2), FORMAT(JSON_EXTRACT(JSON_EXTRACT(product.price, \'$.*.listPrice\'),\'$[0].net\'), 2)) AS list_price_net',
-            'IF(product.price IS NULL, FORMAT(JSON_EXTRACT(JSON_EXTRACT(parent.price, \'$.*.listPrice\'),\'$[0].gross\'), 2),FORMAT(JSON_EXTRACT(JSON_EXTRACT(product.price, \'$.*.listPrice\'),\'$[0].gross\'), 2)) AS list_price_gross',
+            'IF(product.price IS NULL, REPLACE(FORMAT(JSON_EXTRACT(JSON_EXTRACT(parent.price, \'$.*.gross\'),\'$[0]\'), 2), ",", ""), REPLACE(FORMAT(JSON_EXTRACT(JSON_EXTRACT(product.price, \'$.*.gross\'),\'$[0]\'), 2), ",", "")) AS price_gross',
+            'IF(product.price IS NULL, REPLACE(FORMAT(JSON_EXTRACT(JSON_EXTRACT(parent.price, \'$.*.net\'),\'$[0]\'), 2), ",", ""), REPLACE(FORMAT(JSON_EXTRACT(JSON_EXTRACT(product.price, \'$.*.net\'),\'$[0]\'), 2), ",", "")) AS price_net',
+            'IF(product.price IS NULL, REPLACE(FORMAT(JSON_EXTRACT(JSON_EXTRACT(parent.price, \'$.*.listPrice\'),\'$[0].net\'), 2), ",", ""), REPLACE(FORMAT(JSON_EXTRACT(JSON_EXTRACT(product.price, \'$.*.listPrice\'),\'$[0].net\'), 2), ",", "")) AS list_price_net',
+            'IF(product.price IS NULL, REPLACE(FORMAT(JSON_EXTRACT(JSON_EXTRACT(parent.price, \'$.*.listPrice\'),\'$[0].gross\'), 2), ",", ""),REPLACE(FORMAT(JSON_EXTRACT(JSON_EXTRACT(product.price, \'$.*.listPrice\'),\'$[0].gross\'), 2), ",", "")) AS list_price_gross',
             'LOWER(HEX(product.id)) AS product_id',
         ];
 
         if ($salesChannelContext->getTaxState() === CartPrice::TAX_STATE_GROSS) {
             $this->logger->info("BoxalinoExporter: PRICE EXPORT TYPE: " . CartPrice::TAX_STATE_GROSS);
             return array_merge($priceFields, [
-                'IF(product.price IS NULL, FORMAT(JSON_EXTRACT(JSON_EXTRACT(parent.price, \'$.*.gross\'),\'$[0]\'), 2), FORMAT(JSON_EXTRACT(JSON_EXTRACT(product.price, \'$.*.gross\'),\'$[0]\'), 2)) AS price',
-                'IF(product.price IS NULL, FORMAT(JSON_EXTRACT(JSON_EXTRACT(parent.price, \'$.*.listPrice\'),\'$[0].net\'), 2), FORMAT(JSON_EXTRACT(JSON_EXTRACT(product.price, \'$.*.listPrice\'),\'$[0].gross\'), 2)) AS list_price'
+                'IF(product.price IS NULL, REPLACE(FORMAT(JSON_EXTRACT(JSON_EXTRACT(parent.price, \'$.*.gross\'),\'$[0]\'), 2), ",", ""), REPLACE(FORMAT(JSON_EXTRACT(JSON_EXTRACT(product.price, \'$.*.gross\'),\'$[0]\'), 2), ",", "")) AS price',
+                'IF(product.price IS NULL, REPLACE(FORMAT(JSON_EXTRACT(JSON_EXTRACT(parent.price, \'$.*.listPrice\'),\'$[0].net\'), 2), ",", ""), REPLACE(FORMAT(JSON_EXTRACT(JSON_EXTRACT(product.price, \'$.*.listPrice\'),\'$[0].gross\'), 2), ",", "")) AS list_price'
             ]);
         }
 
         $this->logger->info("BoxalinoExporter: PRICE EXPORT TYPE: " . CartPrice::TAX_STATE_NET);
         return array_merge($priceFields, [
-            'IF(product.price IS NULL, FORMAT(JSON_EXTRACT(JSON_EXTRACT(parent.price, \'$.*.net\'),\'$[0]\'), 2), FORMAT(JSON_EXTRACT(JSON_EXTRACT(product.price, \'$.*.net\'),\'$[0]\'), 2)) AS price',
-            'IF(product.price IS NULL, FORMAT(JSON_EXTRACT(JSON_EXTRACT(parent.price, \'$.*.listPrice\'),\'$[0].net\'), 2), FORMAT(JSON_EXTRACT(JSON_EXTRACT(product.price, \'$.*.listPrice\'),\'$[0].net\'), 2)) AS list_price'
+            'IF(product.price IS NULL, REPLACE(FORMAT(JSON_EXTRACT(JSON_EXTRACT(parent.price, \'$.*.net\'),\'$[0]\'), 2), ",", ""), REPLACE(FORMAT(JSON_EXTRACT(JSON_EXTRACT(product.price, \'$.*.net\'),\'$[0]\'), 2), ",", "")) AS price',
+            'IF(product.price IS NULL, REPLACE(FORMAT(JSON_EXTRACT(JSON_EXTRACT(parent.price, \'$.*.listPrice\'),\'$[0].net\'), 2), ",", ""), REPLACE(FORMAT(JSON_EXTRACT(JSON_EXTRACT(product.price, \'$.*.listPrice\'),\'$[0].net\'), 2), ",", "")) AS list_price'
         ]);
     }
 

@@ -145,14 +145,14 @@ class PriceAdvanced extends ItemsAbstract
         if ($salesChannelContext->getTaxState() === CartPrice::TAX_STATE_GROSS) {
             $this->logger->info("BoxalinoExporter: ADVANCED PRICE EXPORT TYPE: " . CartPrice::TAX_STATE_GROSS);
             return [
-                'FORMAT(JSON_EXTRACT(JSON_EXTRACT(product_price.price, \'$.*.gross\'),\'$[0]\'), 2) AS advanced_price',
+                'REPLACE(FORMAT(JSON_EXTRACT(JSON_EXTRACT(product_price.price, \'$.*.gross\'),\'$[0]\'), 2), ",", "") AS advanced_price',
                 'LOWER(HEX(product_price.product_id)) AS product_id'
             ];
         }
 
         $this->logger->info("BoxalinoExporter: ADVANCED PRICE EXPORT TYPE: " . CartPrice::TAX_STATE_NET);
         return [
-            'FORMAT(JSON_EXTRACT(JSON_EXTRACT(product_price.price, \'$.*.net\'),\'$[0]\'), 2) AS advanced_price',
+            'REPLACE(FORMAT(JSON_EXTRACT(JSON_EXTRACT(product_price.price, \'$.*.net\'),\'$[0]\'), 2), ",", "") AS advanced_price',
             'LOWER(HEX(product_price.product_id)) AS product_id'
         ];
     }

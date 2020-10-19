@@ -78,7 +78,7 @@ class Configuration extends \Boxalino\RealTimeUserExperience\Service\Util\Config
             $pluginConfig = $this->getPluginConfigByChannelId($shopData['sales_channel_id']);
             if(!$pluginConfig['export'])
             {
-                $this->logger->info("BoxalinoExporter:: Exporter disabled on channel $channel; Plugin Configurations skipped.");
+                $this->logger->info("BoxalinoExporter:: Exporter disabled on channel {$shopData['sales_channel_name']}; Plugin Configurations skipped.");
                 continue;
             }
 
