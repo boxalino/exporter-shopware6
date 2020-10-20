@@ -18,12 +18,12 @@
 
     <services>
         <!-- scheduled task sample (has to be triggered in the integration layer) -->
-        <service id="Boxalino\Exporter\ScheduledTask\ExporterFullHandlerAbstract" abstract="true">
+        <service id="boxalino.exporter.scheduler.handler.full" class="Boxalino\Exporter\ScheduledTask\ExporterFullHandlerAbstract" abstract="true">
             <argument type="service" id="scheduled_task.repository" />
             <argument type="service" id="monolog.logger.boxalino-exporter"/>
             <argument type="service" id="Boxalino\Exporter\Service\ExporterFullInterface"/>
         </service>
-        <service id="Boxalino\Exporter\ScheduledTask\ExporterDeltaHandlerAbstract" abstract="true">
+        <service id="boxalino.exporter.scheduler.handler.abstract" class="Boxalino\Exporter\ScheduledTask\ExporterDeltaHandlerAbstract" abstract="true">
             <argument type="service" id="scheduled_task.repository" />
             <argument type="service" id="monolog.logger.boxalino-exporter"/>
             <argument type="service" id="Boxalino\Exporter\Service\ExporterDeltaInterface"/>
