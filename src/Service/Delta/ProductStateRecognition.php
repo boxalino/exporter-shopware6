@@ -3,6 +3,7 @@ namespace Boxalino\Exporter\Service\Delta;
 
 use Boxalino\Exporter\Service\ExporterScheduler;
 use Doctrine\DBAL\Query\QueryBuilder;
+use Psr\Log\LoggerInterface;
 
 /**
  * Class ProductStateRecognition
@@ -26,12 +27,15 @@ class ProductStateRecognition implements ProductStateRecognitionInterface
     }
 
     /**
+     * Default: export the products updated since last delta run and exclude the new products
+     * 
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
     public function addState(QueryBuilder $query): QueryBuilder
     {
        return $query->andWhere("STR_TO_DATE(p.updated_at,  '%Y-%m-%d %H:%i') > :lastExport OR STR_TO_DATE(parent.updated_at,  '%Y-%m-%d %H:%i') > :lastExport")
+           ->andWhere("STR_TO_DATE(p.created_at,  '%Y-%m-%d %H:%i') < :lastExport OR STR_TO_DATE(parent.created_at,  '%Y-%m-%d %H:%i') < :lastExport")
            ->setParameter('lastExport', $this->getLastExport());
     }
 
@@ -42,7 +46,7 @@ class ProductStateRecognition implements ProductStateRecognitionInterface
     {
         if (empty($this->lastExport))
         {
-            $this->lastExport = date("Y-m-d H:i:s", strtotime("-1 day"));
+            $this->lastExport = date("Y-m-d H:i", strtotime("-1 day"));
             $latestExport = $this->scheduler->getLastExportByAccountStatus($this->getAccount(), ExporterScheduler::BOXALINO_EXPORTER_STATUS_SUCCESS);
             if(!is_null($latestExport))
             {

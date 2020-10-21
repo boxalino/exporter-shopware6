@@ -8,7 +8,7 @@ use Monolog\Logger;
  * copy of the SDK BxData lib
  * https://github.com/boxalino/boxalino-client-SDK-php/blob/master/lib/BxData.php
  *
- * @package Boxalino\Exporter\Service\Service
+ * @package Boxalino\Exporter\Service\Util
  */
 class ContentLibrary
 {
@@ -186,7 +186,7 @@ class ContentLibrary
         return $this->addSourceFile($filePath, $sourceId, $container, 'resource', 'CSV', $params);
     }
 
-    public function addSourceFile($filePath, $sourceId, $container, $type, $format='CSV', $params=array(), $validate=true) {
+    public function addSourceFile($filePath, $sourceId, $container, $type, $format='CSV', $params=[], $validate=true) {
         if(sizeof($this->getLanguages())==0) {
             throw new \Exception("BoxalinoLibraryError: trying to add a source before having declared the languages with method setLanguages");
         }
@@ -205,9 +205,7 @@ class ContentLibrary
     }
 
     public function decodeSourceKey($sourceKey) {
-        $container = substr($sourceKey, 0, strpos($sourceKey, '-'));
-        $sourceId = substr($sourceKey, strlen($container)+1);
-        return [$container, $sourceId];
+        return explode('-', $sourceKey);
     }
 
     public function encodesourceKey($container, $sourceId) {
@@ -728,18 +726,10 @@ class ContentLibrary
 
     public function getSourceIdFromFileNameFromPath($filePath, $container, $maxLength=23, $withoutExtension=false) {
         $sourceId = $this->getFileNameFromPath($filePath, $withoutExtension);
-        $shortened = false;
         if(strlen($sourceId) > $maxLength) {
             $sourceId = substr($sourceId, 0, $maxLength);
-            $shortened = true;
         }
         if($this->alreadyExistingSourceId($sourceId, $container)) {
-            if(!$shortened) {
-                throw new \Exception(
-                    'BoxalinoLibraryError: Synchronization failure: Same source id requested twice "' .
-                    $filePath . '". Please correct that only created once.'
-                );
-            }
             $postFix = $this->getUnusedSourceIdPostFix($sourceId, $container);
             $sourceId .= $postFix;
         }
@@ -758,7 +748,7 @@ class ContentLibrary
     }
 
     public function getFiles() {
-        $files = array();
+        $files = [];
         foreach($this->sources as $container => $containerSources) {
             foreach($containerSources as $sourceId => $sourceValues) {
                 if(isset($this->ftpSources[$sourceId])) {

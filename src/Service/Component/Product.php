@@ -183,7 +183,7 @@ class Product extends ExporterComponentAbstract
             {
                 $query = $this->addDeltaStateRecognition($query);
             }
-            
+
             $count = $query->execute()->rowCount();
             $totalCount+=$count;
             if($totalCount == 0)
@@ -252,8 +252,6 @@ class Product extends ExporterComponentAbstract
         $this->_exportExtra("categories", $this->categoryExporter);
         $this->_exportExtra("translations", $this->translationExporter);
         $this->_exportExtra("manufacturers", $this->manufacturerExporter);
-        $this->_exportExtra("facets", $this->facetExporter);
-        $this->_exportExtra("options", $this->optionExporter);
         $this->_exportExtra("prices", $this->priceExporter);
         $this->_exportExtra("advancedPrices", $this->priceAdvancedExporter);
         $this->_exportExtra("reviews", $this->reviewsExporter);
@@ -270,6 +268,9 @@ class Product extends ExporterComponentAbstract
             $this->_exportExtra("urls", $this->urlExporter);
         }
 
+        $this->_exportExtra("facets", $this->facetExporter);
+        $this->_exportExtra("options", $this->optionExporter);
+
         /** @var ItemsAbstract $itemExporter */
         foreach($this->itemExportersList as $itemExporter)
         {
@@ -285,13 +286,19 @@ class Product extends ExporterComponentAbstract
      */
     protected function _exportExtra($step, $exporter)
     {
-        $this->logger->info("BoxalinoExporter: Preparing products - {$step}.");
-        $exporter->setAccount($this->getAccount())
-            ->setFiles($this->getFiles())
-            ->setLibrary($this->getLibrary())
-            ->setExportedProductIds($this->getIds());
-        $exporter->export();
-        $this->logger->info("BoxalinoExporter: MEMORY (MB) AFTER {$step}: " . round(memory_get_usage(true)/1048576,2));
+        try {
+            $this->logger->info("BoxalinoExporter: Preparing products - {$step}.");
+            $exporter->setAccount($this->getAccount())
+                ->setFiles($this->getFiles())
+                ->setLibrary($this->getLibrary())
+                ->setExportedProductIds($this->getIds());
+            $exporter->export();
+            $this->logger->info("BoxalinoExporter: MEMORY (MB) AFTER {$step}: " . round(memory_get_usage(true)/1048576,2));
+        } catch (\Exception $exception)
+        {
+            $this->logger->info("BoxalinoExporterError: There was an error during the {$step} export. The product export will continue to next step.");
+            $this->logger->warning("BoxalinoExporterError: There was an occurance during the {$step} export: {$exception->getMessage()}");
+        }
     }
 
     /**

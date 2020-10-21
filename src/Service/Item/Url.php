@@ -90,6 +90,8 @@ class Url extends ItemsAbstract
 
     /**
      * Prepare seo url joins
+     * Filters are set as seen in Shopware\Core\Content\Seo\SeoResolver
+     * 
      * @return \Doctrine\DBAL\Query\QueryBuilder
      * @throws \Exception
      */
@@ -98,7 +100,7 @@ class Url extends ItemsAbstract
         return $this->getLocalizedFields('seo_url', 'id', 'id',
             'foreign_key','seo_path_info',
             ['seo_url.foreign_key', 'seo_url.sales_channel_id'],
-            ["seo_url.route_name='frontend.detail.page'", "seo_url.is_canonical='1'", "LOWER(HEX(seo_url.sales_channel_id))='{$this->getChannelId()}'"]
+            ["seo_url.route_name='frontend.detail.page'", "seo_url.is_canonical='1'", "LOWER(HEX(seo_url.sales_channel_id))='{$this->getChannelId()}' OR seo_url.sales_channel_id IS NULL"]
         );
     }
 

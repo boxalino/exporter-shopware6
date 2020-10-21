@@ -22,6 +22,10 @@ class Property extends PropertyTranslation
      */
     protected $property;
 
+    /**
+     * @var array
+     */
+    protected $exportedPropertiesList = [];
 
     public function export()
     {
@@ -128,9 +132,29 @@ class Property extends PropertyTranslation
      * @param string $property
      * @return $this
      */
-    protected function setProperty(string $property)
+    protected function setProperty(string $property) : self
     {
-        $this->property = strtolower(preg_replace("/[\W]+/", '_', iconv('utf-8', 'ascii//TRANSLIT',$property)));
+        $property = strtolower(preg_replace("/[\W]+/", '_', iconv('utf-8', 'ascii//TRANSLIT', $property)));
+        if(isset($this->exportedPropertiesList[$property]))
+        {
+            $propertyName = $property . "_" . count($this->exportedPropertiesList[$property]);
+        } else {
+            $this->exportedPropertiesList[$property] = [];
+            $propertyName = $property;
+        }
+
+        $this->addToExportedPropertiesList($property, $propertyName);
+        $this->property = $propertyName;
+        return $this;
+    }
+
+    /**
+     * @param string $property
+     * @param string $propertyName
+     */
+    protected function addToExportedPropertiesList(string $property, string $propertyName) : self
+    {
+        $this->exportedPropertiesList[$property][] = $propertyName;
         return $this;
     }
 

@@ -6,7 +6,7 @@
         <input-field type="bool">
             <name>export</name>
             <defaultValue>0</defaultValue>
-            <label>Exporter Status</label>
+            <label>Active</label>
         </input-field>
         <input-field type="text">
             <name>account</name>
@@ -80,7 +80,7 @@
         <input-field type="int">
             <name>exportCronSchedule</name>
             <defaultValue>60</defaultValue>
-            <label>Schedule Time (min)</label>
+            <label>Delta-Full Schedule Time (min)</label>
             <helpText>Set the time in minutes for the delta export cron job to wait since the last full export cron job. This option needs to be set, if you use the delta export cron job regularly, otherwise the delta export will run while the full export is still processing. Usually 4 hours (240 minutes) should be good, but this depends on the size of your shop.</helpText>
         </input-field>
         <input-field type="int">
@@ -91,7 +91,7 @@
         </input-field>
         <input-field type="int">
             <name>exportTimeout</name>
-            <defaultValue>90</defaultValue>
+            <defaultValue>20</defaultValue>
             <label>Timeout</label>
             <helpText>Archive exporter timeout; It is used to stop your server from waiting a status from the processed archive;</helpText>
         </input-field>
