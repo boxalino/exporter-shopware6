@@ -57,7 +57,7 @@ class Manufacturer extends ItemsAbstract
             ->leftJoin("p", 'product', 'parent',
                 'p.parent_id = parent.id AND p.parent_version_id = parent.version_id')
             ->andWhere('p.version_id = :live')
-            ->andWhere('p.product_manufacturer_version_id = :live')
+            ->andWhere('p.product_manufacturer_version_id = :live OR parent.product_manufacturer_version_id = :live')
             ->andWhere("JSON_SEARCH(p.category_tree, 'one', :channelRootCategoryId) IS NOT NULL")
             ->addGroupBy('p.id')
             ->setParameter('live', Uuid::fromHexToBytes(Defaults::LIVE_VERSION), ParameterType::BINARY)
