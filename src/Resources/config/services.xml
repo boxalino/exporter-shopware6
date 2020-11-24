@@ -32,7 +32,9 @@
         <!-- exporter service -->
         <service id="boxalino.exporter.util.file-handler" class="Boxalino\Exporter\Service\Util\FileHandler" />
         <service id="boxalino.exporter.util.library" class="Boxalino\Exporter\Service\Util\ContentLibrary" />
-        <service id="Boxalino\Exporter\Service\ExporterConfigurationInterface" class="Boxalino\Exporter\Service\Util\Configuration" parent="boxalino.shopware.util.configurator" />
+        <service id="Boxalino\Exporter\Service\ExporterConfigurationInterface" class="Boxalino\Exporter\Service\Util\Configuration" parent="boxalino.shopware.util.configurator" >
+            <argument index="2" type="service" id="monolog.logger.boxalino-exporter" />
+        </service>
 
         <service id="boxalino.exporter.scheduler" class="Boxalino\Exporter\Service\ExporterScheduler" >
             <argument type="service" id="Doctrine\DBAL\Connection"/>
