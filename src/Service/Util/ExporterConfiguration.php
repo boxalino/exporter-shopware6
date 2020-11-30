@@ -10,17 +10,18 @@ use Psr\Log\LoggerInterface;
 use Boxalino\Exporter\Service\ExporterConfigurationInterface;
 
 /**
- * Class Configuration
+ * Class ExporterConfiguration
+ *
  * Exporter configuration helper
  * Contains all the configuration data required for the exporter to be managed
  * Can be rewritten with the use of the dependency injection (DI)
  *
  * @package Boxalino\Exporter\Service\Util
  */
-class Configuration extends \Boxalino\RealTimeUserExperience\Service\Util\Configuration
+class ExporterConfiguration
     implements ExporterConfigurationInterface
 {
-    CONST BOXALINO_CONFIG_KEY = "BoxalinoExporter";
+    use ShopwareConfigurationTrait;
 
     /**
      * @var array
@@ -54,6 +55,16 @@ class Configuration extends \Boxalino\RealTimeUserExperience\Service\Util\Config
     protected $indexConfig = [];
 
     /**
+     * @var Connection
+     */
+    protected $connection;
+
+    /**
+     * @var LoggerInterface
+     */
+    protected $logger;
+
+    /**
      * @param SystemConfigService $systemConfigService
      * @param \Psr\Log\LoggerInterface $boxalinoLogger
      * @param Connection $connection
@@ -61,10 +72,12 @@ class Configuration extends \Boxalino\RealTimeUserExperience\Service\Util\Config
      */
     public function __construct(
         SystemConfigService $systemConfigService,
-        Connection $connection,
-        LoggerInterface $boxalinoLogger
+        LoggerInterface $boxalinoLogger,
+        Connection $connection
     ) {
-        parent::__construct($systemConfigService, $connection, $boxalinoLogger);
+        $this->systemConfigService = $systemConfigService;
+        $this->logger = $boxalinoLogger;
+        $this->connection = $connection;
         $this->init();
     }
 
@@ -164,6 +177,7 @@ class Configuration extends \Boxalino\RealTimeUserExperience\Service\Util\Config
 
         return $query->execute()->fetchAll();
     }
+
 
     /**
      * @throws \Exception

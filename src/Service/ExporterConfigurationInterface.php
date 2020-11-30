@@ -8,6 +8,7 @@ namespace Boxalino\Exporter\Service;
  */
 interface ExporterConfigurationInterface
 {
+    public CONST BOXALINO_CONFIG_KEY = "BoxalinoExporter";
 
     /**
      * @param string $account
@@ -144,5 +145,5 @@ interface ExporterConfigurationInterface
      * @throws \Exception
      */
     public function getDeltaFrequencyMinInterval() : int;
-    
+
 }
