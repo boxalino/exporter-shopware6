@@ -2,15 +2,17 @@
 namespace Boxalino\Exporter\Service\Item;
 
 /**
- * Class Media
+ * Class Image
+ * Exports the main product image
+ * 
  * @package Boxalino\Exporter\Service\Item
  */
-class Media extends MediaAbstract
+class Image extends MediaAbstract
     implements ItemComponentInterface
 {
-    CONST EXPORTER_COMPONENT_ITEM_NAME = "media";
-    CONST EXPORTER_COMPONENT_ITEM_MAIN_FILE = 'media.csv';
-    CONST EXPORTER_COMPONENT_ITEM_RELATION_FILE = 'product_media.csv';
+    CONST EXPORTER_COMPONENT_ITEM_NAME = "image";
+    CONST EXPORTER_COMPONENT_ITEM_MAIN_FILE = 'image.csv';
+    CONST EXPORTER_COMPONENT_ITEM_RELATION_FILE = 'product_image.csv';
 
     /**
      * @param array $row
@@ -18,13 +20,8 @@ class Media extends MediaAbstract
      */
     public function processMediaRow(array $row) : array
     {
-        $images = explode('|', $row[$this->getPropertyIdField()]);
-        foreach ($images as $index => $image)
-        {
-            $images[$index] = $this->getImageByMediaId($image);
-        }
-        
-        $row[$this->getPropertyIdField()] = implode('|', $images);
+        $image = $this->getImageByMediaId($row[$this->getPropertyIdField()]);
+        $row[$this->getPropertyIdField()] = $image;
         
         return $row;
     }
@@ -33,16 +30,16 @@ class Media extends MediaAbstract
     {
         $attributeSourceKey = $this->getLibrary()->addCSVItemFile($this->getFiles()->getPath($this->getItemRelationFile()), 'product_id');
         $this->getLibrary()->addSourceStringField($attributeSourceKey, $this->getPropertyName(), $this->getPropertyIdField());
-        $this->getLibrary()->addFieldParameter($attributeSourceKey, $this->getPropertyName(), 'splitValues', '|');
+        $this->getLibrary()->addFieldParameter($attributeSourceKey, $this->getPropertyName(), 'multiValued', 'false');
     }
-
+    
     /**
      * @return array
      */
     public function getRequiredFields(): array
     {
         return [
-            "GROUP_CONCAT(LOWER(HEX(product_media.media_id)) ORDER BY product_media.position SEPARATOR '|') AS {$this->getPropertyIdField()}",
+            "LOWER(HEX(product_media.media_id)) AS {$this->getPropertyIdField()}",
             "LOWER(HEX(product.id)) AS product_id"
         ];
     }

@@ -3,6 +3,7 @@ namespace Boxalino\Exporter\Service\Component;
 
 use Boxalino\Exporter\Service\Component\ProductComponentInterface;
 use Boxalino\Exporter\Service\ExporterScheduler;
+use Boxalino\Exporter\Service\Item\Image;
 use Boxalino\Exporter\Service\Item\ItemsAbstract;
 use Boxalino\Exporter\Service\Item\Manufacturer;
 use Boxalino\Exporter\Service\Item\Category;
@@ -56,6 +57,11 @@ class Product extends ExporterComponentAbstract
 
     /**
      * @var Media
+     */
+    protected $mediaExporter;
+
+    /**
+     * @var Image
      */
     protected $imagesExporter;
 
@@ -117,7 +123,8 @@ class Product extends ExporterComponentAbstract
         Category $categoryExporter,
         Property $facetExporter,
         Option $optionExporter,
-        Media $imagesExporter,
+        Media $mediaExporter,
+        Image $imagesExporter,
         Manufacturer $manufacturerExporter,
         Price $priceExporter,
         PriceAdvanced $priceAdvanced,
@@ -133,6 +140,7 @@ class Product extends ExporterComponentAbstract
         $this->priceAdvancedExporter = $priceAdvanced;
         $this->categoryExporter = $categoryExporter;
         $this->facetExporter = $facetExporter;
+        $this->mediaExporter = $mediaExporter;
         $this->imagesExporter = $imagesExporter;
         $this->manufacturerExporter = $manufacturerExporter;
         $this->priceExporter = $priceExporter;
@@ -257,10 +265,11 @@ class Product extends ExporterComponentAbstract
         $this->_exportExtra("reviews", $this->reviewsExporter);
         $this->_exportExtra("tags", $this->tagExporter);
         $this->_exportExtra("visibility", $this->visibilityExporter);
+        $this->_exportExtra("image", $this->imagesExporter);
 
         if ($this->config->exportProductImages())
         {
-            $this->_exportExtra("media", $this->imagesExporter);
+            $this->_exportExtra("media", $this->mediaExporter);
         }
 
         if ($this->config->exportProductUrl())
@@ -340,7 +349,7 @@ class Product extends ExporterComponentAbstract
      */
     public function getNumberFields() : array
     {
-        return ["available_stock", "stock", "rating_average", "child_count", "purchasable", "immediate_delivery8"];
+        return ["available_stock", "stock", "rating_average", "child_count", "purchasable", "immediate_delivery"];
     }
 
     /**
@@ -348,7 +357,10 @@ class Product extends ExporterComponentAbstract
      */
     public function getSingleValuedFields() : array
     {
-        return ["parent_id", "release_date", "created_at", "updated_at", "product_number", "manufacturer_number", "ean", "group_id", "mark_as_topseller"];
+        return [
+            "parent_id", "release_date", "created_at", "updated_at", "product_number", "manufacturer_number", "ean",
+            "group_id", "mark_as_topseller", "visibility", "shipping_free", "is_closeout"
+        ];
     }
 
     /**

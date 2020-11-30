@@ -102,6 +102,11 @@
             <argument type="service" id="media.repository"/>
         </service>
 
+        <service id="boxalino.exporter.component.product.image" class="Boxalino\Exporter\Service\Item\Image" parent="boxalino.exporter.component.item">
+            <argument type="service" id="Shopware\Core\Content\Media\Pathname\UrlGeneratorInterface"/>
+            <argument type="service" id="media.repository"/>
+        </service>
+
     </services>
 
 </container>
