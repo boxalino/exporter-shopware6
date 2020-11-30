@@ -6,6 +6,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\FetchMode;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Query\QueryBuilder;
+use Shopware\Core\Defaults;
 use Shopware\Core\Framework\Uuid\Uuid;
 
 /**
@@ -90,22 +91,38 @@ class Property extends PropertyTranslation
      */
     public function getItemRelationQuery(int $page = 1): QueryBuilder
     {
-        $query = $this->connection->createQueryBuilder();
-        $query->select([
-            "LOWER(HEX(product_property.product_id)) AS product_id",
-            "LOWER(HEX(product_property.property_group_option_id)) AS '{$this->getPropertyIdField()}'"])
+        $propertyQuery = $this->connection->createQueryBuilder();
+        $propertyQuery->select(['product_property.property_group_option_id', "product_property.product_id"])
             ->from("product_property")
             ->leftJoin("product_property", "property_group_option", "property_group_option",
                 "product_property.property_group_option_id = property_group_option.id")
             ->where("property_group_option.property_group_id = :propertyId")
+            ->andWhere('product_property.product_version_id= :live')
+            ->setParameter('live', Uuid::fromHexToBytes(Defaults::LIVE_VERSION), ParameterType::BINARY)
+            ->setParameter("propertyId", Uuid::fromHexToBytes($this->propertyId), ParameterType::STRING);
+
+        $query = $this->connection->createQueryBuilder();
+        $query->select([
+                "LOWER(HEX(p.id)) AS product_id",
+                "LOWER(HEX(product_property.property_group_option_id)) AS '{$this->getPropertyIdField()}'"
+            ])
+            ->from('product', 'p')
+            ->leftJoin('p','( ' . $propertyQuery->__toString() . ') ', 'product_property',
+            'p.id = product_property.product_id OR p.parent_id = product_property.product_id')
+            ->where('p.version_id = :live')
+            ->andWhere('p.parent_version_id = :live')
+            ->andWhere("JSON_SEARCH(p.category_tree, 'one', :channelRootCategoryId) IS NOT NULL")
+            ->andWhere('product_property.property_group_option_id IS NOT NULL')
             ->setParameter("propertyId", Uuid::fromHexToBytes($this->propertyId), ParameterType::STRING)
+            ->setParameter('live', Uuid::fromHexToBytes(Defaults::LIVE_VERSION), ParameterType::BINARY)
+            ->setParameter('channelRootCategoryId', $this->getRootCategoryId(), ParameterType::STRING)
             ->setFirstResult(($page - 1) * ProductComponentInterface::EXPORTER_STEP)
             ->setMaxResults(ProductComponentInterface::EXPORTER_STEP);
 
         $productIds = $this->getExportedProductIds();
         if(!empty($productIds))
         {
-            $query->andWhere('product_property.product_id IN (:ids)')
+            $query->andWhere('p.id IN (:ids)')
                 ->setParameter('ids', Uuid::fromHexToBytesList($productIds), Connection::PARAM_STR_ARRAY);
         }
 

@@ -140,7 +140,7 @@ class Category extends ItemsAbstract
         $productIds = $this->getExportedProductIds();
         if (!empty($productIds)) 
         {
-            $query->andWhere("LOWER(HEX(product_category_tree.product_id)) IN (:ids)")
+            $query->andWhere("product_category_tree.product_id IN (:ids)")
                 ->setParameter('ids', Uuid::fromHexToBytesList($productIds), Connection::PARAM_STR_ARRAY);
         }
 
