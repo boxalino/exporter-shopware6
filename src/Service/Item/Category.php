@@ -34,6 +34,8 @@ class Category extends ItemsAbstract
             ->from("category")
             ->leftJoin('category', '( ' . $this->getLocalizedFieldsQuery()->__toString() . ') ',
                 'translations', 'translations.category_id = category.id AND category.version_id = translations.category_version_id')
+            ->leftJoin('category', '( ' . $this->getSeoUrlQuery()->__toString() . ') ',
+                'seo_url', 'seo_url.foreign_key = category.id')
             ->leftJoin('category', '( ' . $this->getTagsQuery()->__toString() . ' )', 'category_tags',
                 'category_tags.category_id = category.id AND category_tags.category_version_id = category.version_id')
             ->andWhere('category.path LIKE :rootCategoryId OR LOWER(HEX(category.id))=:root')
@@ -89,6 +91,21 @@ class Category extends ItemsAbstract
     }
 
     /**
+     * Returning category tags joined via comma
+     *
+     * @return \Doctrine\DBAL\Query\QueryBuilder
+     * @throws \Shopware\Core\Framework\Uuid\Exception\InvalidUuidException
+     */
+    public function getSeoUrlQuery() : QueryBuilder
+    {
+        return $this->getLocalizedFields('seo_url', 'id', 'id',
+            'foreign_key','seo_path_info',
+            ['seo_url.foreign_key', 'seo_url.sales_channel_id'],
+            ["seo_url.route_name='frontend.navigation.page'", "seo_url.is_canonical='1'", "LOWER(HEX(seo_url.sales_channel_id))='{$this->getChannelId()}' OR seo_url.sales_channel_id IS NULL"]
+        );
+    }
+
+    /**
      * @TODO implement incremental save to file for data
      * @throws \Shopware\Core\Framework\Uuid\Exception\InvalidUuidException
      */
@@ -138,7 +155,7 @@ class Category extends ItemsAbstract
             ->setParameter('live', Uuid::fromHexToBytes(Defaults::LIVE_VERSION), ParameterType::BINARY);
 
         $productIds = $this->getExportedProductIds();
-        if (!empty($productIds)) 
+        if (!empty($productIds))
         {
             $query->andWhere("product_category_tree.product_id IN (:ids)")
                 ->setParameter('ids', Uuid::fromHexToBytesList($productIds), Connection::PARAM_STR_ARRAY);
@@ -153,8 +170,13 @@ class Category extends ItemsAbstract
      */
     public function getRequiredFields(): array
     {
-        $translationFields = preg_filter('/^/', 'translations.', $this->getLanguageHeaders());
-        return array_merge($translationFields,
+        $translationFields = array_values(preg_filter('/^/', 'translations.', $this->getLanguageHeaders()));
+        $urlFields = preg_filter('/^/', 'seo_url.', $this->getLanguageHeaders());
+        array_walk($urlFields, function(&$value, $key){
+            $value = $value . " AS seo_url_$key";
+        });
+
+        return array_merge($translationFields, $urlFields,
             [
                 'LOWER(HEX(category.id)) AS id', 'category.auto_increment', 'LOWER(HEX(category.parent_id)) as parent_id',
                 'LOWER(HEX(category.cms_page_id)) AS cms_page_id',
