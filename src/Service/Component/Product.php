@@ -207,6 +207,9 @@ class Product extends ExporterComponentAbstract
                 }
                 $row['purchasable'] = $this->getProductPurchasableValue($row);
                 $row['immediate_delivery'] = $this->getProductImmediateDeliveryValue($row);
+                $row['show_out_of_stock'] = (string)!$row['is_closeout'];
+                $row['is_new'] = $this->getIsNew();
+                $row['in_sales'] = $this->getInSales();
                 if($header)
                 {
                     $exportFields = array_keys($row); $this->setHeaderFields($exportFields); $data[] = $exportFields; $header = false;
@@ -359,7 +362,8 @@ class Product extends ExporterComponentAbstract
     {
         return [
             "parent_id", "release_date", "created_at", "updated_at", "product_number", "manufacturer_number", "ean",
-            "group_id", "mark_as_topseller", "visibility", "shipping_free", "is_closeout"
+            "group_id", "mark_as_topseller", "visibility", "shipping_free", "is_closeout", "immediate_delivery",
+            "show_out_of_stock", "is_new", "is_sale", "min_purchase", "purchase_steps", "available"
         ];
     }
 
@@ -456,6 +460,27 @@ class Product extends ExporterComponentAbstract
         }
 
         return $row['parent_id'];
+    }
+
+    /**
+     * Fields required for DI structure
+     * (by default, Shopware6 has the "Mark products as 'new', for ? days" which can be used for the logic
+     *
+     * @return bool
+     */
+    public function getIsNew() : string
+    {
+        return (string) false;
+    }
+
+    /**
+     * Fields required for DI structure
+     *
+     * @return string
+     */
+    public function getInSales() : string
+    {
+        return (string) false;
     }
 
     /**
