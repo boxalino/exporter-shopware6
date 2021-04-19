@@ -1,5 +1,11 @@
 # Boxalino Shopware6 Data Exporter
 
+## Notice
+The Data Exporter Layer is replaced by the Data Integration Layer.
+For integrations to come, please use the DI plugin: https://github.com/boxalino/data-integration-shopware6
+
+>Get in touch with Boxalino for migrations from Data Exporter to Data Integration.
+
 ## Introduction
 For the Shopware6 integration, Boxalino comes with a divided approach: framework layer, data export layer and integration layer.
 The current repository is used as a **data export layer**.
