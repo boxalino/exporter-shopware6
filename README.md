@@ -1,3 +1,4 @@
+# DEPRECATED
 # Boxalino Shopware6 Data Exporter
 
 ## Notice
